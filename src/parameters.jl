@@ -9,6 +9,8 @@
     npoly::Int64 = 64
 
     value = 0
+
+    flow::Vector = ["off"]
 end
 
 

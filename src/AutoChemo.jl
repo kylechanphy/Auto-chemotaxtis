@@ -29,7 +29,7 @@ function Simulation(sysPara, part)
     flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
     
     for j in 2:Nstep
-        # farfield2!(flow_field, sysPara, part) 
+        flowField!(flow_field, sysPara, part) 
         diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
         F = getChemForce(dchem_field, sysPara, part)
         chem_field, dchem_field = dchem_field, chem_field
