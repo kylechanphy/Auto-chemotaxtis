@@ -16,6 +16,7 @@ plots
 notebooks
 _research
 .vscode
+script
 *.err
 *.out
 
