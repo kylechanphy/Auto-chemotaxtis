@@ -2,6 +2,8 @@ using Pkg
 Pkg.activate(".")
 include("src/AutoChemo.jl")
 
+using JLD2
+
 
 part = Particle()
 sysPara = SysPara()
@@ -30,5 +32,8 @@ part.α = -180
 sysPara.npoly = 180 #! Must be a multiple of 4
 sysPara.Nstep = 100_000
 
-@time u, all_pos, all_F, field = Simulation(sysPara, part)
+@time u, all_pos, all_F, flow = Simulation(sysPara, part)
 
+
+savename="raw/v$(part.v0)_w0$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep).jld2"
+data = Dict("field"=>u, "pos"=>all_pos, "force"=>all_F, "flow"=>flow)
