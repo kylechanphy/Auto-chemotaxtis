@@ -10,7 +10,7 @@
 
     value = 0
 
-    flow::Vector = ["off"]
+    flow::Bool = false 
 end
 
 

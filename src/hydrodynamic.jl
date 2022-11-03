@@ -2,7 +2,7 @@ function flowField!(field, sysPara, part)
     @unpack pos, vel, ω0, R = part
     @unpack nx, ny, dx, dy = sysPara
 
-    if !("off" in sysPara.flow)
+    if sysPara.flow
         Threads.@threads for i in 1:nx
             # @show vel, i,j
             for j in 1:ny
@@ -21,14 +21,14 @@ function flowField!(field, sysPara, part)
 
                 else
                     pos0 = (SA[i, j] .- 1.0) .* SA[dx, dy]
-                    for flow_tpye in sysPara.flow
-                        # f = Symbol(flow_tpye)
-                        # flow += @eval $f(part.vel, part.ω0, pos0, part.pos, part)
-                        flow = flow + flow_tpye(part.vel, part.ω0, pos0, part.pos, part)
-                    end
-                    field[i][j] = flow
+                    # for flow_tpye in sysPara.flow
+                    #     # f = Symbol(flow_tpye)
+                    #     # flow += @eval $f(part.vel, part.ω0, pos0, part.pos, part)
+                    #     flow = flow + flow_tpye(vel, ω0, pos0, pos, part)
+                    # end
+                    # field[i][j] = flow
                     # field[i][j] += dipole2D(v, pos, p, para) + rotlet(ω, pos, p, para) + f_dipole(v, pos, p, para)
-                    # field[i][j] = dipole2D(vel, pos0, pos, part) + rotlet(ω0, pos0, pos, part)
+                    field[i][j] = source(vel, ω0, pos0, pos, part) + rotlet(vel, ω0, pos0, pos, part)
                     # field[i][j] = dipole2D(vel, pos0, pos, part)
                     # field[i][j] = myflow(vel, pos0, pos, part)
 
