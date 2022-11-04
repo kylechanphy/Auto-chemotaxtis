@@ -2,7 +2,7 @@
 circle(R, x, y) = (θ = LinRange(0, 2π, 30);
 (x .+ R .* cos.(θ), y .+ R .* sin.(θ)))
 
-function viz(u, all_p, sysPara)
+function viz(u, all_p, sysPara, part)
     Nx = sysPara.nx
     Ny = sysPara.ny
     dx = sysPara.dx
