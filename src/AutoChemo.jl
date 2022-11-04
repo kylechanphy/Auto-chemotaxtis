@@ -5,6 +5,7 @@ using StaticArrays
 using LinearAlgebra
 using Interpolations
 using JLD2
+using ProgressMeter
 
 include("parameters.jl")
 include("tools.jl")
@@ -29,6 +30,7 @@ function Simulation(sysPara, part)
     all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
     flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
     
+    prog = Progress(Nstep-1, 5) #* progress bar
     for j in 2:Nstep
         flowField!(flow_field, sysPara, part) 
         diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
@@ -48,6 +50,7 @@ function Simulation(sysPara, part)
         part.pos = pos
         part.ϕ = ϕ
 
+        next!(prog) #* progress bar
     end
     return chem_field, all_pos, all_F, flow_field
 end
