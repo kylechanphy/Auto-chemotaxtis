@@ -14,7 +14,7 @@ function viz(u, all_p, sysPara, part)
         xlims=(0, (Nx - 1) * dx), ylims=(0, (Ny - 1) * dy), aspect_ratio=1)
     x = [v[1] for v in all_p]
     y = [v[2] for v in all_p]
-    plot!(circle(part.R, part.pos[1], part.pos[2]), label="", c=:green)
+    plot!(circle(part.R, part.pos[1], part.pos[2]), label="", c=:green, fill=1)
     plot!(hm, x, y, label="", c=:white)
     return hm
 end

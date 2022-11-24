@@ -10,7 +10,7 @@
 
     value = 0
 
-    flow::Bool = false 
+    flow::Bool = false
 end
 
 
@@ -26,4 +26,12 @@ end
     pos::SVector = SA[0.0, 0.0]
     vel::SVector = SA[0.0, 0.0]
     ϕ::Float64 = 0.0
+end
+
+@with_kw mutable struct loggerSetting
+    savedata::Bool = false
+    dump_field::Bool = false
+    dump_flow::Bool = false
+    every::Int = 10
+
 end
