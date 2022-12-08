@@ -11,6 +11,7 @@ single_droplet.jl
 # Folders to ignore - files may be too large, too many, etc. NOTE: EDIT IF NEEDED.
 data
 raw
+raw2
 videos
 plots
 notebooks

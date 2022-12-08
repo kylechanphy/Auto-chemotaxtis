@@ -6,6 +6,8 @@ using LinearAlgebra
 using Interpolations
 using JLD2
 using ProgressMeter
+using StatsBase
+using FFTW
 
 include("parameters.jl")
 include("tools.jl")

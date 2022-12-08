@@ -1,9 +1,9 @@
 
 function savedir(part, sysPara)
     if sysPara.flow
-        dir = "raw2/v$(part.v0)_w0$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+        dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
     else
-        dir = "raw2/v$(part.v0)_w0$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+        dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
     end
     return dir
 end
@@ -69,3 +69,42 @@ function dumping(logger, s, part, sysPara, logset)
 end
 
 
+"""
+curvature of chemodroplet 
+"""
+
+### Auto-correlation function 
+function ACF(data, lags)
+    lag = [v for v in 0:lags]
+    return lag, autocor(data, lag)
+end
+
+function FFT(signal, para::Dict)
+    N = length(signal)
+    dt = para["dt"]
+    t = dt:dt:dt*N
+    freq, F = FFT(signal, t)
+
+    return freq, F
+end
+
+function FFT(signal, para::SysPara)
+    N = length(signal)
+    dt = para.dt
+    t = dt:dt:dt*N
+    freq, F = FFT(signal, t)
+
+    return freq, F
+end
+
+function FFT(signal, t)
+    dt = t[2] - t[1]
+    N = length(t)
+    freq = rfftfreq(N, 1/dt)
+    F = abs.(rfft(signal))
+    
+    return freq, F
+end
+
+
+moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]
