@@ -22,6 +22,8 @@ script
 *.err
 *.out
 *.sh
+*.7z
+*.svg
 
 ################################################################################
 #                                    Julia                                     #
@@ -67,8 +69,8 @@ docs/site/
 Backup of *.doc*
 
 # Excel temporary
-~$*.xls*
-
+~$*.xlx*
+*.xlsx
 # Excel Backup File
 *.xlk
 

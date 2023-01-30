@@ -1,10 +1,17 @@
 
 function savedir(part, sysPara)
     if sysPara.flow
-        dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+        # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+        # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
+        dir = @sprintf("raw3/flow/Pe%s/a%s_dx%.3f_nx%s_N%s", 
+        part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
-        dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+        # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+        # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
+        dir = @sprintf("raw3/Pe%s/a%s_dx%.3f_nx%s_N%s", 
+        part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     end
+
     return dir
 end
 
@@ -50,7 +57,7 @@ function initLogger(part, sysPara)
     logger.Fc = all_F
     logger.field = chem_field
 
-    
+
     flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
     logger.flow = flow_field
 
@@ -60,24 +67,88 @@ end
 
 function dumping(logger, s, part, sysPara, logset)
     if logset.dump_flow == true
-        save(string(savedir(part, sysPara) * "/flow/flow_$s.jld2"),Dict("flow"=>logger.flow))
+        save(string(savedir(part, sysPara) * "/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
     end
-   
+
     if logset.dump_field == true
-        save(string(savedir(part, sysPara) * "/field/field_$(s).jld2"), Dict("field"=>logger.field))
+        save(string(savedir(part, sysPara) * "/field/field_$(s).jld2"), Dict("field" => logger.field))
     end
 end
 
 
+#* print all elements in struct
+function printStruct(obj)
+    T = typeof(obj)
+    for name in fieldnames(T)
+        println("$name = $(getfield(obj, name))")
+    end
+end
+
+function dumpTxt(obj,dir)
+    open(dir*"/input.txt", "w") do io
+        # write(io, "vel1=$(mean(norm.(vel)))\n")
+        T = typeof(obj)
+        for name in fieldnames(T)
+            write(io, "$name = $(getfield(obj, name))\n")
+        end  
+    end
+end
+
+function dumpTxt(objs::Vector, dir)
+    open(dir * "/input.txt", "w") do io
+        for obj in objs
+            T = typeof(obj)
+            for name in fieldnames(T)
+                write(io, "$name = $(getfield(obj, name))\n")
+            end
+        end
+    end
+end
 """
 curvature of chemodroplet 
 """
 
-### Auto-correlation function 
+## Auto-correlation function 
 function ACF(data, lags)
     lag = [v for v in 0:lags]
     return lag, autocor(data, lag)
 end
+
+
+function ACF(vel::Vector{SVector{2,Float64}}, lags)
+    lag = [v for v in 0:lags]
+    out = zeros(lags + 1)
+    ns = length(vel) - lags
+    # for k in 1:ns
+    zz = dot(view(vel, 1:ns), view(vel, 1:ns)) / ns
+    for k in 0:lags
+        # for j in 1:ns
+        out[k+1] = dot(view(vel, 1:ns), view(vel, 1+k:ns+k))
+        # out += [@views (dot(vel[k], vel[k+i]) ./ (norm(vel[k])^2)) for i in 0:lags]
+        # end
+    end
+    out = out / zz / ns
+    # end
+    return lag, out
+end
+
+# function ACF2(vel::Vector{SVector{2,Float64}}, lags)
+#     lag = [v for v in 0:lags]
+#     out = zeros(lags + 1)
+#     ns = length(vel) - lags
+#     # for k in 1:ns
+#     # zz = dot(view(vel, 1:ns), view(vel, 1:ns)) / ns
+#     for k in 1:ns
+#         # for j in 1:ns
+#         # out[k+1] = dot(view(vel, 1:ns), view(vel, 1+k:ns+k))
+#         out += [@views (dot(vel[k], vel[k+i]) ./ (dot(vel[k], vel[k]))) for i in 0:lags]
+#         # end
+#     end
+#     # out = out / zz / ns
+#     # end
+#     return lag, out / ns
+# end
+
 
 function FFT(signal, para::Dict)
     N = length(signal)
@@ -100,11 +171,12 @@ end
 function FFT(signal, t)
     dt = t[2] - t[1]
     N = length(t)
-    freq = rfftfreq(N, 1/dt)
+    freq = rfftfreq(N, 1 / dt)
     F = abs.(rfft(signal))
-    
+
     return freq, F
 end
 
 
+moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]
 moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]

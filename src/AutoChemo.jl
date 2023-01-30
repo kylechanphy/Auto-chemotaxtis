@@ -8,6 +8,7 @@ using JLD2
 using ProgressMeter
 using StatsBase
 using FFTW
+using Printf
 
 include("parameters.jl")
 include("tools.jl")
@@ -23,6 +24,17 @@ function Simulation(sysPara, part, logset)
     @unpack dt, Nstep = sysPara
 
     logger = initLogger(part, sysPara)
+    
+    if logset.savedata == true
+        dir = savedir(part,sysPara)
+        if ispath(dir)
+            nothing
+        else
+            mkpath(dir)
+        end
+        inputs = [sysPara, part]
+        dumpTxt(inputs, dir)
+    end
 
     chem_field = logger.field
     dchem_field = copy(chem_field)

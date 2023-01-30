@@ -18,10 +18,11 @@ end
     v0::Float16 = 10
     ω0::Float64 = 1
     Dr::Float64 = 0
-    D::Float64 = 1
+    Pe::Float64 = 10
+    D::Float64 = 1/Pe
     R::Float64 = 10
     src::Float64 = 1.0
-    α::Float64 = 1.0
+    α::Float64 = -1.0
 
     pos::SVector = SA[0.0, 0.0]
     vel::SVector = SA[0.0, 0.0]
