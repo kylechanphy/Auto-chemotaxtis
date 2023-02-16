@@ -71,7 +71,7 @@ function plot_color(data, xlab="", ylab="")
 end
 
 
-function viz_color(pos::Vector, marker=false)
+function viz_color(pos::Vector ;marker=false, cbar=false)
     x = [v[1] for v in pos]
     y = [v[2] for v in pos]
 
@@ -79,9 +79,9 @@ function viz_color(pos::Vector, marker=false)
         aspect_ratio=1,
         linez=range(0.0, stop=1.0, length=length(y)),
         linewidth=5,
-        c=:batlow,
+        c=:lightrainbow,
         legend=false,
-        colorbar=false,)
+        colorbar=cbar)
 
     if marker == true
         px = [v[1] for v in pos]

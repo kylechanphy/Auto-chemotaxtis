@@ -1,15 +1,20 @@
 
 function savedir(part, sysPara)
-    if sysPara.flow
-        # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
-        # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-        dir = @sprintf("raw3/flow/Pe%s/a%s_dx%.3f_nx%s_N%s", 
-        part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
+    if part.Dr != 0 
+        dir = @sprintf("raw3/Dr%.3f/Pe%s/a%s_dx%.3f_nx%s_N%s", 
+        part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
-        # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
-        # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-        dir = @sprintf("raw3/Pe%s/a%s_dx%.3f_nx%s_N%s", 
-        part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
+        if sysPara.flow
+            # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+            # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
+            dir = @sprintf("raw3/flow/Pe%s/a%s_dx%.3f_nx%s_N%s", 
+            part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
+        else
+            # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+            # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
+            dir = @sprintf("raw3/Pe%s/a%s_dx%.3f_nx%s_N%s", 
+            part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
+        end
     end
 
     return dir
@@ -179,4 +184,4 @@ end
 
 
 moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]
-moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]
+# moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]
