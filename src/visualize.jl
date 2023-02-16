@@ -19,6 +19,23 @@ function viz(u, all_p, sysPara, part)
     return hm
 end
 
+function viz(u, all_p, sysPara)
+    Nx = sysPara.nx
+    Ny = sysPara.ny
+    dx = sysPara.dx
+    dy = sysPara.dy
+
+    hmx = (0:Nx-1) * dy
+    hmy = (0:Ny-1) * dx
+    hm = heatmap(hmx, hmy, transpose(u),
+        xlims=(0, (Nx) * dx), ylims=(0, (Ny) * dy), aspect_ratio=1)
+    x = [v[1] for v in all_p]
+    y = [v[2] for v in all_p]
+    # plot!(circle(part.R, part.pos[1], part.pos[2]), label="", c=:green, fill=1)
+    plot!(hm, x, y, label="", c=:white)
+    return hm
+end
+
 function viz(pos::Vector)
     x = [v[1] for v in pos]
     y = [v[2] for v in pos]
@@ -77,3 +94,12 @@ function viz_color(pos::Vector, marker=false)
     return fig
 end
 
+function plot_Fc(logger, sysPara, part, sacle)
+    fig = viz(logger.field, logger.pos, sysPara, part)
+    x, y = logger.pos[end]
+    u, v = logger.Fc[end]
+    vec = 5 * [u, v] / norm([u, v])
+    quiver!(fig, [x], [y], quiver=([vec[1]], [vec[2]]), color=:cyan)
+
+    return fig
+end
