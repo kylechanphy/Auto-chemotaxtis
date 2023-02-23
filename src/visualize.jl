@@ -36,20 +36,72 @@ function viz(u, all_p, sysPara)
     return hm
 end
 
-function viz(pos::Vector)
-    x = [v[1] for v in pos]
-    y = [v[2] for v in pos]
-
-    plot(x,y, label="",
-        aspect_ratio = 1)
-end
-
-function viz(pos::Vector, N)
+function viz(pos::Vector; N=length(pos))
     x = [v[1] for v in pos]
     y = [v[2] for v in pos]
 
     plot(x[1:N],y[1:N], label="",
         aspect_ratio = 1)
+end
+
+
+
+function viz(pos::Vector{SVector{3, Float64}}, sysPara)
+    dt = sysPara.dt
+    x = [v[1] for v in pos]
+    y = [v[2] for v in pos]
+    z = [v[3] for v in pos]
+    N = length(x)
+    t = 0:dt:dt*(N-1)
+  
+    plot(x,y,z, label="",
+        xlabel="x", ylabel="y", zlabel="z",
+        aspect_ratio=1,
+        line_z=t,
+        color=:viridis)
+    # scatter!([x[1]], [y[1]], [z[1]])
+end
+
+function vizXY(pos::Vector{SVector{3,Float64}}, sysPara)
+    x = [v[1] for v in pos]
+    y = [v[2] for v in pos]
+    N = length(x)
+    dt = sysPara.dt
+    t = 0:dt:dt*(N-1)
+    
+    plot(x,y, label="",
+        xlabel="x", ylabel="y", left_margin=2mm,
+        aspect_ratio=1,
+        line_z=t,
+        color=:viridis)
+end
+
+function vizXZ(pos::Vector{SVector{3,Float64}}, sysPara)
+    x = [v[1] for v in pos]
+    z = [v[3] for v in pos]
+    N = length(x)
+    dt = sysPara.dt
+    t = 0:dt:dt*(N-1)
+    
+    plot(x,z, label="",
+        xlabel="x", ylabel="z", left_margin=2mm,
+        aspect_ratio=1,
+        line_z=t,
+        color=:viridis)
+end
+
+function vizYZ(pos::Vector{SVector{3,Float64}}, sysPara)
+    z = [v[3] for v in pos]
+    y = [v[2] for v in pos]
+    N = length(z)
+    dt = sysPara.dt
+    t = 0:dt:dt*(N-1)
+
+    plot(y, z, label="",
+        xlabel="y", ylabel="z", left_margin=2mm,
+        aspect_ratio=1,
+        line_z=t,
+        color=:viridis)
 end
 
 

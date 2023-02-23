@@ -1,4 +1,4 @@
-function flowField!(field, sysPara, part)
+function flowField!(field, sysPara, part::Particle)
     @unpack pos, vel, ω0, R = part
     @unpack nx, ny, dx, dy = sysPara
 
@@ -39,6 +39,50 @@ function flowField!(field, sysPara, part)
     end
 
 end
+
+
+function flowField!(field, sysPara, part::Particle3D)
+    @unpack pos, vel, ω0, R = part
+    @unpack nx, ny, dx, dy = sysPara
+    # field = field
+    # if sysPara.flow
+    #     Threads.@threads for i in 1:nx
+    #         # @show vel, i,j
+    #         for j in 1:ny
+    #             flow = SA[0.,0.]
+    #             r = norm(pos - (SA[i-1, j-1]) .* SA[dx, dy])
+    #             if r == 0
+    #                 field[i][j] = SA[0.0, 0.0]
+    #             elseif r < 1
+    #                 # pos0 = (SA[i, j] .- 1.0) .* SA[dx, dy]
+    #                 # for flow_tpye in sysPara.flow
+    #                 #     f = Symbol(flow_tpye)
+    #                 #     flow += @eval $f(vel, ω0, pos0, pos, part)
+    #                 # end
+    #                 # field[i][j] = flow * r
+    #                 field[i][j] = SA[0.,0.]
+
+    #             else
+    #                 pos0 = (SA[i, j] .- 1.0) .* SA[dx, dy]
+    #                 # for flow_tpye in sysPara.flow
+    #                 #     # f = Symbol(flow_tpye)
+    #                 #     # flow += @eval $f(part.vel, part.ω0, pos0, part.pos, part)
+    #                 #     flow = flow + flow_tpye(vel, ω0, pos0, pos, part)
+    #                 # end
+    #                 # field[i][j] = flow
+    #                 # field[i][j] += dipole2D(v, pos, p, para) + rotlet(ω, pos, p, para) + f_dipole(v, pos, p, para)
+    #                 field[i][j] = source(vel, ω0, pos0, pos, part) + rotlet(vel, ω0, pos0, pos, part)
+    #                 # field[i][j] = dipole2D(vel, pos0, pos, part)
+    #                 # field[i][j] = myflow(vel, pos0, pos, part)
+
+    #                 # field[i][j] = SA[0.,0.]
+    #             end
+    #         end
+    #     end
+    # end
+
+end
+
 
 function myflow(vel, w,  pos0, pos, part)
     x, y = pos0 - pos

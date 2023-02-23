@@ -8,6 +8,12 @@ function diffusion!(u, du, flow, sysPara, part)
     # return u, du
 end
 
+function diffusion!(u, du, flow, sysPara, part::Particle3D)
+    constFlux!(u, sysPara, part) #* point sources with constant rate
+    updataGrid!(u, du, sysPara, part)
+    DirichletBoundary!(du, sysPara)
+    # return u, du
+end
 
 #=
 * implementation of point sources
@@ -32,6 +38,31 @@ function constFlux!(du, sysPara, part)
     end
 end
 
+function constFlux!(du, sysPara, part::Particle3D)
+    @unpack nx, ny, dx, dy, dz, dt = sysPara
+    @unpack pos, R, src = part
+
+    x, y, z = pos #! physical positin
+
+    #! grid coordinate, julia array start from 1
+    xlimlo = floor(Int, (x - 1.2R) / dx + 1)
+    xlimup = ceil(Int, (x + 1.2R) / dx + 1)
+    ylimlo = floor(Int, (y - 1.2R) / dy + 1)
+    ylimup = ceil(Int, (y + 1.2R) / dy + 1)
+    zlimlo = floor(Int, (z - 1.2R) / dz + 1)
+    zlimup = ceil(Int, (z + 1.2R) / dz + 1)
+
+
+    Threads.@threads for i in xlimlo:xlimup
+        for j in ylimlo:ylimup
+            for k in zlimlo:zlimup
+            du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) / dx) * ibm4c(abs(y - (j - 1) * dy) / dy)* ibm4c(abs(y - (k - 1) * dz) / dz) / dx^3
+            end
+        end
+    end
+end
+
+
 #=
 * ibm 4-point cubic kernal
 ! r in distant between grid and particle
@@ -53,7 +84,7 @@ end
 #= 
 * update grid in diffusion equation with 2-order method
 =#
-function updataGrid!(u, du, sysPara, part)
+function updataGrid!(u, du, sysPara, part::Particle3D)
     @unpack dx, dy, dt, nx, ny = sysPara
     @unpack pos, R, D = part
     Threads.@threads for i in 2:nx-1
@@ -67,6 +98,22 @@ function updataGrid!(u, du, sysPara, part)
     end
 end
 
+
+function updataGrid!(u, du, sysPara, part::Particle3D)
+    @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
+    @unpack pos, R, D = part
+    for i in 2:nx-1
+       Threads.@threads for j in 2:ny-1
+            for k in 2:nz-1
+                du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) / dx^2
+                                            +
+                                            (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) / dy^2
+                                            +
+                                            (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) / dz^2)
+            end
+        end
+    end
+end
 #= 
 * update grid in advecton-diffusion equation with 2-order method
 =#
@@ -82,6 +129,24 @@ function updataGridAdvection!(u, du, flow, sysPara, part)
         end
     end
 end
+
+#! unchange
+function updataGridAdvection!(u, du, flow, sysPara, part::Particle3D)
+    @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
+    @unpack pos, R, D = part
+    for i in 2:nx-1
+        Threads.@threads for j in 2:ny-1
+            for k in 2:nz-1
+                du[i, j, k ] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) / dx^2 - ((u[i+1, j, k] - u[i-1, j, k] / 2dx)) * flow[i][j][k][1]
+                                            +
+                                            (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) / dy^2 - ((u[i, j+1, k] - u[i, j-1, k] / 2dy)) * flow[i][j][k][2]
+                                            +
+                                            (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) / dz^2 - ((u[i, j, k+1] - u[i, j, k-1] / 2dz)) * flow[i][j][k][3])
+            end
+        end
+    end
+end
+
 
 #= 
 * update grid in diffusion equation with 4-order method
@@ -135,3 +200,24 @@ function DirichletBoundary!(du, sysPara)
     @views du[nx, :] .= value
 end
 
+function DirichletBoundary!(du::Array{Float64,3}, sysPara)
+    @unpack nx, ny, nz, value = sysPara
+
+    @views du[:, 1, :] .= value
+    @views du[:, ny, :] .= value
+
+    @views du[1, :, :] .= value
+    @views du[nx, :, :] .= value
+
+    @views du[:, :, 1] .= value
+    @views du[:, :, nz] .= value
+end
+
+
+function NeumannBoundary!(du::Array{Float64,3}, sysPara)
+    @unpack nx, ny, nz = sysPara
+
+    # for i in 1:nx
+    #     du[i,1,1] = 
+
+end

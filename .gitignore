@@ -434,3 +434,8 @@ $RECYCLE.BIN/
 
 ## Acknowledgements
 # Many thanks to `https://gitignore.io/`, written and maintained by Joe Blau, which contributed much material to this gitignore file.
+raw3/Pe100.0/a-1.0_dx0.200_nx1000_N6000/input.txt
+raw3/Pe20.0/a-1.0_dx0.200_nx1000_N6000/input.txt
+raw3/Pe40.0/a-1.0_dx0.200_nx1000_N6000/input.txt
+raw3/Pe60.0/a-1.0_dx0.200_nx1000_N6000/input.txt
+raw3/Pe80.0/a-1.0_dx0.200_nx1000_N6000/input.txt
