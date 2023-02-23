@@ -69,8 +69,9 @@ end
 
 @with_kw mutable struct Logger3D
     pos::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
+    v::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
     Fc::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
-    field::Array{Float64, 3} = zeros(2, 2, 2)
+    field::Array{Float64,3} = zeros(2, 2, 2)
     flow::Vector{Vector{SVector{2,Float64}}} = [[SA[0.0, 0.0] for _ in 1:2]]
 end
 
@@ -103,17 +104,19 @@ end
 #* Initalse logger 3D
 function initLogger(part::Particle3D, sysPara)
     logger = Logger3D()
-    @unpack pos, ϕ, θ,v0, ω0, α, Dr = part
+    @unpack pos, ϕ0, θ0, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
 
-
+    v_head = SA[cos(ϕ0)sin(θ0), sin(ϕ0)sin(θ0), cos(θ0)]
     chem_field = zeros(sysPara.nx, sysPara.ny, sysPara.nz)
 
     all_pos = [pos for _ in 1:Nstep]
+    all_v = [v_head for _ in 1:Nstep]
     all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
     flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
 
     logger.pos = all_pos
+    logger.v = all_v
     logger.Fc = all_F
     logger.field = chem_field
 

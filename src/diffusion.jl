@@ -11,7 +11,8 @@ end
 function diffusion!(u, du, flow, sysPara, part::Particle3D)
     constFlux!(u, sysPara, part) #* point sources with constant rate
     updataGrid!(u, du, sysPara, part)
-    DirichletBoundary!(du, sysPara)
+    # DirichletBoundary!(du, sysPara)
+    NeumannBoundary!(u, du, sysPara)
     # return u, du
 end
 
@@ -214,10 +215,30 @@ function DirichletBoundary!(du::Array{Float64,3}, sysPara)
 end
 
 
-function NeumannBoundary!(du::Array{Float64,3}, sysPara)
+function NeumannBoundary!(u::Array{Float64,3}, du, sysPara)
     @unpack nx, ny, nz = sysPara
 
-    # for i in 1:nx
-    #     du[i,1,1] = 
+    #* X-Y plane
+    Threads.@threads for i in 1:nx
+        for j in 1:ny
+            du[i, j, 1] = u[i, j, 3]
+            du[i, j, nz] = u[i, j, nz-2]
+        end
+    end
+    
+    #* Y-Z plane
+    Threads.@threads for j in 1:ny
+        for k in 1:nz
+            du[1, j, k] = u[3, j, k]
+            du[nx, j, k] = u[nx-2, j, k]
+        end
+    end
 
+    #* X-Z plane
+    Threads.@threads for i in 1:nx
+        for k in 1:nz
+            du[i, 1, k] = u[i, 3, k]
+            du[i, ny, k] = u[i, ny-2, k]
+        end
+    end
 end
