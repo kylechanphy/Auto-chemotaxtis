@@ -95,10 +95,10 @@ end
 
 
 function Simulation(sysPara, part::Particle3D, logset)
-    @unpack pos, ϕ, θ, v0, ω0, α, Dr = part
+    @unpack pos, ϕ0, θ0, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
 
-    logger = initLogger(part, sysPara)
+    logger = initLogger(part::Particle3D, sysPara)
 
     if logset.savedata == true
         #* get save path
@@ -112,6 +112,8 @@ function Simulation(sysPara, part::Particle3D, logset)
         dumpTxt(inputs, dir)
     end
 
+    ω_head = SA[cos(ϕ_ω)sin(θ_ω), sin(ϕ_ω)sin(θ_ω), cos(θ_ω)]
+    v_head = SA[cos(ϕ0)sin(θ0), sin(ϕ0)sin(θ0), cos(θ0)]
     chem_field = logger.field
     dchem_field = copy(chem_field)
     # chem_field = zeros(sysPara.nx, sysPara.ny)
@@ -119,7 +121,9 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
     dpos = copy(pos)
-    dϕ = copy(ϕ)
+    # dω_head = copy(dω_head)
+    dv_head = copy(v_head)
+
 
     # all_pos = [pos for _ in 1:Nstep]
     # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
@@ -134,22 +138,33 @@ function Simulation(sysPara, part::Particle3D, logset)
         chem_field, dchem_field = dchem_field, chem_field
 
         # all_F[j] = copy(F .* α)
-        vel = SA[cos(ϕ)*sin(θ), sin(ϕ)*sin(θ), cos(θ)] * v0
+        vel = v_head * v0
 
         part.vel = vel + α * F
         dpos = pos + part.vel * dt
         # all_pos[j] = copy(dpos)
-        dϕ = ϕ + ω0 * dt + sqrt(2 * Dr * dt) * randn()
-        dθ = θ + sqrt(2 * Dr * dt) * randn()
+        # dϕ = ϕ + ω0 * dt + sqrt(2 * Dr * dt) * randn()
+        # dθ = θ + sqrt(2 * Dr * dt) * randn()
+        # dϕ = ϕ + ω0*sin(π/2)*sin(π/2 - θ)*dt + Dr/tan(ϕ)*dt + sqrt(2 * Dr * dt) * randn()
+        # dθ = θ + ω0*(cos(π/2) - sin(π/2)cos(π/2 - θ)/tan(ϕ))*dt + sqrt(2 * Dr * dt)/sin(ϕ) * randn()
+        
+        dv_head = @fastmath v_head +  ω0*cross(ω_head, v_head)*dt + sqrt(2 * Dr * dt)*cross(randVec(), v_head)
+
         pos, dpos = dpos, pos
-        ϕ, dϕ, = dϕ, ϕ
-        θ, dθ = dθ, θ
+        # ϕ, dϕ, = dϕ, ϕ
+        # θ, dθ = dθ, θ
+
+        v_head, dv_head = dv_head, v_head
+
+
 
         part.pos = pos
-        part.ϕ = ϕ
-        part.θ = θ
+        part.v = v_head
+        # part.ϕ = ϕ
+        # part.θ = θ
 
         logger.pos[j] = copy(pos)
+        logger.v[j] = copy(v_head)
         logger.Fc[j] = copy(F .* α)
 
         if j % logset.every == 0
@@ -164,4 +179,10 @@ function Simulation(sysPara, part::Particle3D, logset)
     end
     # return chem_field, all_pos, all_F, flow_field, logger
     return logger
+end
+
+
+function randVec()
+    v = randn(3)
+    return @fastmath v ./ norm(v)
 end
