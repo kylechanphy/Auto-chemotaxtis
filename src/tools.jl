@@ -23,7 +23,7 @@ end
 
 function savedir(part::Particle3D, sysPara)
     if part.Dr != 0
-        dir = @sprintf("3D/raw3/Dr%.3f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("3D/raw3/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
         if sysPara.flow
