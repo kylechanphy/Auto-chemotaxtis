@@ -34,12 +34,14 @@ function Simulation(sysPara, part::Particle, logset)
     if logset.savedata == true
         dir = savedir(part, sysPara)
         if ispath(dir)
+
             nothing
         else
             mkpath(dir)
         end
+        sysPara.dir = dir
         inputs = [sysPara, part]
-        dumpTxt(inputs, dir)
+        dumpTxt(inputs, sysPara.dir)
     end
 
     chem_field = logger.field
@@ -101,16 +103,17 @@ function Simulation(sysPara, part::Particle3D, logset)
 
     logger = initLogger(part::Particle3D, sysPara)
 
+
     if logset.savedata == true
-        #* get save path
         dir = savedir(part, sysPara)
         if ispath(dir)
             nothing
         else
             mkpath(dir)
         end
+        sysPara.dir = dir
         inputs = [sysPara, part]
-        dumpTxt(inputs, dir)
+        dumpTxt(inputs, sysPara.dir)
     end
 
     ω_head = SA[cos(ϕ_ω)sin(θ_ω), sin(ϕ_ω)sin(θ_ω), cos(θ_ω)]

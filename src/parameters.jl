@@ -14,6 +14,8 @@
     value = 0
 
     flow::Bool = false
+
+    dir::String = ""
 end
 
 

@@ -1,7 +1,7 @@
 
 function savedir(part, sysPara)
     if part.Dr != 0
-        dir = @sprintf("raw3/Dr%.3f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("raw3/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
         if sysPara.flow
@@ -16,9 +16,12 @@ function savedir(part, sysPara)
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
     end
+    # @show dir
+    dir = updataFileVersion(dir)
     @show dir
     return dir
 end
+
 
 
 function savedir(part::Particle3D, sysPara)
@@ -26,6 +29,7 @@ function savedir(part::Particle3D, sysPara)
         dir = @sprintf("3D/raw3/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
+
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
@@ -37,11 +41,38 @@ function savedir(part::Particle3D, sysPara)
             dir = @sprintf("3D/raw3/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
+
     end
-    # @show dir
+
+    dir = updataFileVersion(dir)
+    @show dir
+
     return dir
 end
 
+function updataFileVersion(dir)
+    if ispath(dir)
+        # println("isdir")
+        str = split(dir, "_")[end]
+
+        if split(str, "")[1] != "v"
+            dir = dir * "_v1"
+            dir = updataFileVersion(dir)
+            # mkpath(dir)
+        else
+            n = parse(Int64, (filter(isdigit, str)))
+            dir = replace(dir, str => "v$(n+1)")
+            dir = updataFileVersion(dir)
+            # mkpath(dir)
+        end
+    else
+        # mkpath(dir)
+    end
+
+
+    return dir
+    # @show dir
+end
 
 function savedata!(field, all_pos, all_F, flow, part, sysPara)
     # if sysPara.flow
@@ -50,7 +81,7 @@ function savedata!(field, all_pos, all_F, flow, part, sysPara)
     #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
     # end
     data = Dict("field" => field, "pos" => all_pos, "force" => all_F, "flow" => flow, "part" => part, "sysPara" => sysPara)
-    save(string(savedir(part, sysPara) * "/data.jld2"), data)
+    save((sysPara.dir * "/data.jld2"), data)
 
     # return savedir
 end
@@ -160,21 +191,21 @@ end
 
 function dumping(logger, s, part, sysPara, logset)
     if logset.dump_flow == true
-        save(string(savedir(part, sysPara) * "/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
+        save((sysPara.dir * "/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
     end
 
     if logset.dump_field == true
-        save(string(savedir(part, sysPara) * "/field/field_$(s).jld2"), Dict("field" => logger.field))
+        save((sysPara.dir * "/field/field_$(s).jld2"), Dict("field" => logger.field))
     end
 end
 
 function dumping(logger::Logger3D, s, part::Particle3D, sysPara, logset)
     if logset.dump_flow == true
-        save(string(savedir(part, sysPara) * "3D/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
+        save((sysPara.dir * "3D/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
     end
 
     if logset.dump_field == true
-        save(string(savedir(part, sysPara) * "3D/field/field_$(s).jld2"), Dict("field" => logger.field))
+        save((sysPara.dir * "3D/field/field_$(s).jld2"), Dict("field" => logger.field))
     end
 end
 
