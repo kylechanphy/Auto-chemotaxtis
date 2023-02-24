@@ -102,6 +102,7 @@ function Simulation(sysPara, part::Particle3D, logset)
     logger = initLogger(part::Particle3D, sysPara)
 
     if logset.savedata == true
+        #* get save path
         dir = savedir(part, sysPara)
         if ispath(dir)
             nothing
@@ -186,5 +187,3 @@ function randVec()
     v = randn(3)
     return @fastmath v ./ norm(v)
 end
-
-
