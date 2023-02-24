@@ -101,6 +101,7 @@ function Simulation(sysPara, part::Particle3D, logset)
     logger = initLogger(part, sysPara)
 
     if logset.savedata == true
+        #* get save path
         dir = savedir(part, sysPara)
         if ispath(dir)
             nothing

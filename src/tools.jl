@@ -38,9 +38,11 @@ function savedir(part::Particle3D, sysPara)
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
     end
-    @show dir
+    # @show dir
     return dir
 end
+
+
 function savedata!(field, all_pos, all_F, flow, part, sysPara)
     # if sysPara.flow
     #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
@@ -53,6 +55,25 @@ function savedata!(field, all_pos, all_F, flow, part, sysPara)
     # return savedir
 end
 
+function dumpTxt(obj, dir)
+    open(dir * "/input.txt", "w") do io
+        # write(io, "vel1=$(mean(norm.(vel)))\n")
+        T = typeof(obj)
+        for name in fieldnames(T)
+            write(io, "$name = $(getfield(obj, name))\n")
+        end
+    end
+end
+
+function dumpTxt(objs::Vector, dir)
+    open(dir * "/input.txt", "w") do io
+        for obj in objs
+            T = typeof(obj)
+            for name in fieldnames(T)
+                write(io, "$name = $(getfield(obj, name))\n")
+            end
+        end
+    end
 
 #=
 logging data
@@ -157,25 +178,7 @@ function printStruct(obj)
     end
 end
 
-function dumpTxt(obj, dir)
-    open(dir * "/input.txt", "w") do io
-        # write(io, "vel1=$(mean(norm.(vel)))\n")
-        T = typeof(obj)
-        for name in fieldnames(T)
-            write(io, "$name = $(getfield(obj, name))\n")
-        end
-    end
-end
 
-function dumpTxt(objs::Vector, dir)
-    open(dir * "/input.txt", "w") do io
-        for obj in objs
-            T = typeof(obj)
-            for name in fieldnames(T)
-                write(io, "$name = $(getfield(obj, name))\n")
-            end
-        end
-    end
 end
 """
 curvature of chemodroplet 
