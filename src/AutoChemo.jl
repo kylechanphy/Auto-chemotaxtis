@@ -11,6 +11,7 @@ using FFTW
 using Printf
 using Rotations
 using Measures
+# using GLMakie
 # using Revise
 
 
@@ -148,7 +149,7 @@ function Simulation(sysPara, part::Particle3D, logset)
         # dθ = θ + ω0*(cos(π/2) - sin(π/2)cos(π/2 - θ)/tan(ϕ))*dt + sqrt(2 * Dr * dt)/sin(ϕ) * randn()
         
         dv_head = @fastmath v_head +  ω0*cross(ω_head, v_head)*dt + sqrt(2 * Dr * dt)*cross(randVec(), v_head)
-
+        dv_head = @fastmath dv_head ./ norm(dv_head)
         pos, dpos = dpos, pos
         # ϕ, dϕ, = dϕ, ϕ
         # θ, dθ = dθ, θ
@@ -185,3 +186,5 @@ function randVec()
     v = randn(3)
     return @fastmath v ./ norm(v)
 end
+
+

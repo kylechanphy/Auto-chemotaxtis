@@ -113,7 +113,13 @@ function initLogger(part::Particle3D, sysPara)
     all_pos = [pos for _ in 1:Nstep]
     all_v = [v_head for _ in 1:Nstep]
     all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
-    flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+
+    if sysPara.flow == false
+        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:2]
+    else
+        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    end
+
 
     logger.pos = all_pos
     logger.v = all_v

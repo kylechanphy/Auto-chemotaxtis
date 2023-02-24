@@ -40,10 +40,18 @@ function viz(pos::Vector; N=length(pos))
     x = [v[1] for v in pos]
     y = [v[2] for v in pos]
 
-    plot(x[1:N],y[1:N], label="",
-        aspect_ratio = 1)
+    plot(x[1:N], y[1:N], label="",
+        aspect_ratio=1)
 end
 
+
+function set_equla_aspect!(fig)
+    x12, y12, z12 = xlims(fig), ylims(fig), zlims(fig)
+    d = maximum([diff([x12...]), diff([y12...]), diff([z12...])])[1] / 2
+    xm, ym, zm = mean(x12), mean(y12), mean(z12)
+
+    Plots.plot!(fig, xlims=(xm - d, xm + d), ylims=(ym - d, ym + d), zlims=(zm - d, zm + d))
+end
 
 
 function viz(pos::Vector{SVector{3, Float64}}, sysPara)
@@ -54,13 +62,54 @@ function viz(pos::Vector{SVector{3, Float64}}, sysPara)
     N = length(x)
     t = 0:dt:dt*(N-1)
   
-    plot(x,y,z, label="",
+    fig = plot(x,y,z, label="",
         xlabel="x", ylabel="y", zlabel="z",
-        aspect_ratio=1,
+        aspect_ratio=:equal,
         line_z=t,
         color=:viridis)
+    # plot!(aspect_ratio=:equal)
+    set_equla_aspect!(fig)
     # scatter!([x[1]], [y[1]], [z[1]])
 end
+
+
+
+# function plot_iso3d(xs, ys, zs; lw=3, label=false)
+#     # condition data for nearly isometric 3D plot 
+#     x12, y12, z12 = extrema(xs), extrema(ys), extrema(zs)
+#     d = maximum([diff([x12...]), diff([y12...]), diff([z12...])])[1] / 2
+#     xm, ym, zm = mean(x12), mean(y12), mean(z12)
+
+#     # plot data
+#     p = Plots.plot(; xlabel="x", ylabel="y", zlabel="z", aspect_ratio=:equal, grid=:true)
+#     Plots.plot!(xlims=(xm - d, xm + d), ylims=(ym - d, ym + d), zlims=(zm - d, zm + d))
+#     # Plots.plot!(; camera=(45,30))    #(azimuth,elevation) ???
+#     Plots.plot!(xs, ys, zs, line_z = t, c=:viridis, label=label)
+#     # Plots.plot!(xs, ys, zlims(p)[1] .+ 0 * zs, lw=1, label=false)
+#     # Plots.plot!(xs, ylims(p)[2] .+ 0 * ys, zs, lw=1,  label=false)
+#     # Plots.plot!(xlims(p)[1] .+ 0 * xs, ys, zs, lw=1, lc=:lightgray, label=false)
+# end
+
+# function viz(pos::Vector{SVector{3, Float64}}, sysPara)
+#     GLMakie.activate!()
+#     dt = sysPara.dt
+#     x = [v[1] for v in pos]
+#     y = [v[2] for v in pos]
+#     z = [v[3] for v in pos]
+#     N = length(x)
+#     t = 0:dt:dt*(N-1)
+
+#     aspect = (1, 1, 1)
+#     perspectiveness = 0.5
+#     # the figure
+#     fig = Figure()
+#     ax1 = Axis3(fig[1, 1]; aspect = (1,1,1))
+#     l = lines!(ax1, x, y, z; color=t, linewidth=3)
+#     Colorbar( fig[1,2], l; label="time")
+#     scale!(ax1.scene, (1,1,1)...)
+
+#     fig
+# end
 
 function vizXY(pos::Vector{SVector{3,Float64}}, sysPara)
     x = [v[1] for v in pos]
@@ -71,7 +120,7 @@ function vizXY(pos::Vector{SVector{3,Float64}}, sysPara)
     
     plot(x,y, label="",
         xlabel="x", ylabel="y", left_margin=2mm,
-        aspect_ratio=1,
+         aspect_ratio=:equal,
         line_z=t,
         color=:viridis)
 end
@@ -85,7 +134,7 @@ function vizXZ(pos::Vector{SVector{3,Float64}}, sysPara)
     
     plot(x,z, label="",
         xlabel="x", ylabel="z", left_margin=2mm,
-        aspect_ratio=1,
+        aspect_ratio=:equal,
         line_z=t,
         color=:viridis)
 end
@@ -99,7 +148,7 @@ function vizYZ(pos::Vector{SVector{3,Float64}}, sysPara)
 
     plot(y, z, label="",
         xlabel="y", ylabel="z", left_margin=2mm,
-        aspect_ratio=1,
+        aspect_ratio=:equal,
         line_z=t,
         color=:viridis)
 end
