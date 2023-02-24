@@ -74,6 +74,9 @@ function dumpTxt(objs::Vector, dir)
             end
         end
     end
+end
+
+
 
 #=
 logging data
@@ -187,8 +190,6 @@ function printStruct(obj)
     end
 end
 
-
-end
 """
 curvature of chemodroplet 
 """
