@@ -11,8 +11,7 @@ using FFTW
 using Printf
 using Rotations
 using Measures
-# using GLMakie
-# using Revise
+
 
 
 

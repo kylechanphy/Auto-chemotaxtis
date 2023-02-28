@@ -43,21 +43,24 @@ function constFlux!(du, sysPara, part::Particle3D)
     @unpack nx, ny, dx, dy, dz, dt = sysPara
     @unpack pos, R, src = part
 
+    _dx, _dy, _dz = 1/dx, 1/dy, 1/dz
+    _dx3 = 1/dx^3
     x, y, z = pos #! physical positin
 
+
     #! grid coordinate, julia array start from 1
-    xlimlo = floor(Int, (x - 1.2R) / dx + 1)
-    xlimup = ceil(Int, (x + 1.2R) / dx + 1)
-    ylimlo = floor(Int, (y - 1.2R) / dy + 1)
-    ylimup = ceil(Int, (y + 1.2R) / dy + 1)
-    zlimlo = floor(Int, (z - 1.2R) / dz + 1)
-    zlimup = ceil(Int, (z + 1.2R) / dz + 1)
+    xlimlo = floor(Int, (x - 1.2R) * _dx + 1)
+    xlimup = ceil(Int, (x + 1.2R) * _dx + 1)
+    ylimlo = floor(Int, (y - 1.2R) * _dy + 1)
+    ylimup = ceil(Int, (y + 1.2R) * _dy + 1)
+    zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
+    zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
 
 
     Threads.@threads for i in xlimlo:xlimup
         for j in ylimlo:ylimup
             for k in zlimlo:zlimup
-            du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) / dx) * ibm4c(abs(y - (j - 1) * dy) / dy)* ibm4c(abs(y - (k - 1) * dz) / dz) / dx^3
+            du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy)* ibm4c(abs(y - (k - 1) * dz) * _dz) * _dx3
             end
         end
     end
@@ -85,32 +88,35 @@ end
 #= 
 * update grid in diffusion equation with 2-order method
 =#
-function updataGrid!(u, du, sysPara, part::Particle3D)
-    @unpack dx, dy, dt, nx, ny = sysPara
-    @unpack pos, R, D = part
-    Threads.@threads for i in 2:nx-1
-        for j in 2:ny-1
+# function updataGrid!(u, du, sysPara, part::Particle)
+#     @unpack dx, dy, dt, nx, ny = sysPara
+#     @unpack pos, R, D = part
+#     Threads.@threads for i in 2:nx-1
+#         for j in 2:ny-1
 
-            du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
-                                           +
-                                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) / dy^2)
-            # end
-        end
-    end
-end
+#             du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
+#                                            +
+#                                            (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) / dy^2)
+#             # end
+#         end
+#     end
+# end
 
 
 function updataGrid!(u, du, sysPara, part::Particle3D)
     @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
     @unpack pos, R, D = part
+
+    _dx2, _dy2, _dz2 = 1/dx^2, 1/dy^2, 1/dz^2
+    
     for i in 2:nx-1
        Threads.@threads for j in 2:ny-1
             for k in 2:nz-1
-                du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) / dx^2
+                du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) *_dx2
                                             +
-                                            (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) / dy^2
+                                            (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) * _dy2
                                             +
-                                            (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) / dz^2)
+                                            (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) * _dz2)
             end
         end
     end

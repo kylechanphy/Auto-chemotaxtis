@@ -170,9 +170,9 @@ function initLogger(part::Particle3D, sysPara)
     all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
 
     if sysPara.flow == false
-        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:2]
+        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:2] for _ in 1:2]
     else
-        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:2] for _ in 1:2]
     end
 
 
@@ -285,7 +285,15 @@ function FFT(signal, para::SysPara)
     return freq, F
 end
 
-function FFT(signal, t)
+function FFT(signal, dt::Float64)
+    N = length(signal)
+    # dt = para.dt
+    t = dt:dt:dt*N
+    freq, F = FFT(signal, t)
+
+    return freq, F
+end
+function FFT(signal, t::Vector)
     dt = t[2] - t[1]
     N = length(t)
     freq = rfftfreq(N, 1 / dt)
