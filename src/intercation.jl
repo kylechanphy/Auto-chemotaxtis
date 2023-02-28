@@ -41,16 +41,26 @@ function getChemForce(field, sysPara, part::Particle3D, bound_vec)
     @unpack pos, R, = part
     @unpack dx, dy, dz, npoly = sysPara
 
+    _dx, _dy, _dz = 1/dx, 1/dy, 1/dz
+    
     force = SA[0.0, 0.0, 0.0]
 
     x, y, z = pos
 
-    xlimlo = floor(Int, (x - 1.2R) / dx + 1)
-    xlimup = ceil(Int, (x + 1.2R) / dx + 1)
-    ylimlo = floor(Int, (y - 1.2R) / dy + 1)
-    ylimup = ceil(Int, (y + 1.2R) / dy + 1)
-    zlimlo = floor(Int, (z - 1.2R) / dz + 1)
-    zlimup = ceil(Int, (z + 1.2R) / dz + 1)
+    # xlimlo = floor(Int, (x - 1.2R) / dx + 1)
+    # xlimup = ceil(Int, (x + 1.2R) / dx + 1)
+    # ylimlo = floor(Int, (y - 1.2R) / dy + 1)
+    # ylimup = ceil(Int, (y + 1.2R) / dy + 1)
+    # zlimlo = floor(Int, (z - 1.2R) / dz + 1)
+    # zlimup = ceil(Int, (z + 1.2R) / dz + 1)
+
+    xlimlo = floor(Int, (x - 1.2R) * _dx + 1)
+    xlimup = ceil(Int, (x + 1.2R) * _dx + 1)
+    ylimlo = floor(Int, (y - 1.2R) * _dy + 1)
+    ylimup = ceil(Int, (y + 1.2R) * _dy + 1)
+    zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
+    zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
+
 
     #* values for interpolation 
     refpoint = [field[i, j, k] for i in xlimlo:xlimup, j in ylimlo:ylimup, k in zlimlo:zlimup]
@@ -63,20 +73,20 @@ function getChemForce(field, sysPara, part::Particle3D, bound_vec)
     sitp = scale(interpolate(refpoint, BSpline(Quadratic(InPlace(OnCell())))), xlist, ylist, zlist)
 
     #* find the gradient across a finte size particle
-    
-    len = Int(length(bound_vec[1]) / 2)
-    for j in 1:7    
-        for i in 1:len
-            pt1 = bound_vec[j][i].*R
-            pt2 = bound_vec[j][len+i].*R #! always opposite to pt1
 
-            F = (sitp(x+pt1[1], y+pt1[2], z+pt1[3]) - sitp(x+pt2[1], y+pt2[2], z+pt2[3])) / 2R #! It is a scaler
+    len = Int(length(bound_vec[1]) / 2)
+    for j in 1:7
+        for i in 1:len
+            pt1 = bound_vec[j][i] .* R
+            pt2 = bound_vec[j][len+i] .* R #! always opposite to pt1
+
+            F = (sitp(x + pt1[1], y + pt1[2], z + pt1[3]) - sitp(x + pt2[1], y + pt2[2], z + pt2[3])) / 2R #! It is a scaler
             F *= bound_vec[j][i] #! times unit vector
             force += F
         end
     end
 
-    return force / (length(bound_vec[1])*7)
+    return force / (length(bound_vec[1]) * 7)
 end
 
 
