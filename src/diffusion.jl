@@ -57,8 +57,8 @@ function constFlux!(du, sysPara, part::Particle3D)
     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
 
 
-    Threads.@threads for i in xlimlo:xlimup
-        for j in ylimlo:ylimup
+     for i in xlimlo:xlimup
+       Threads.@threads for j in ylimlo:ylimup
             for k in zlimlo:zlimup
             du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy)* ibm4c(abs(y - (k - 1) * dz) * _dz) * _dx3
             end
@@ -113,7 +113,7 @@ function updataGrid!(u, du, sysPara, part::Particle3D)
     for i in 2:nx-1
        Threads.@threads for j in 2:ny-1
             for k in 2:nz-1
-                du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) *_dx2
+                du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2
                                             +
                                             (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) * _dy2
                                             +

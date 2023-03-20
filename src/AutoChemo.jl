@@ -11,7 +11,7 @@ using FFTW
 using Printf
 using Rotations
 using Measures
-
+using LaTeXStrings
 
 
 

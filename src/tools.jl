@@ -26,19 +26,19 @@ end
 
 function savedir(part::Particle3D, sysPara)
     if part.Dr != 0
-        dir = @sprintf("3D/raw3/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("3D/raw4/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
 
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("3D/raw3/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("3D/raw4/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("3D/raw3/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("3D/raw4/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
 
@@ -293,7 +293,7 @@ function FFT(signal, dt::Float64)
 
     return freq, F
 end
-function FFT(signal, t::Vector)
+function FFT(signal, t)
     dt = t[2] - t[1]
     N = length(t)
     freq = rfftfreq(N, 1 / dt)
