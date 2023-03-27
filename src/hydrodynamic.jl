@@ -46,8 +46,21 @@ end
 function flowField!(field, sysPara, part::Particle3D)
     @unpack pos, vel, ω0, R = part
     @unpack nx, ny, dx, dy = sysPara
+    #* cut off of flow field 
+    # cutoff = 20*R
     # field = field
+
     # if sysPara.flow
+
+        
+    #     xlimlo = floor(Int, (x - 1.2R) * _dx + 1)
+    #     xlimup = ceil(Int, (x + 1.2R) * _dx + 1)
+    #     ylimlo = floor(Int, (y - 1.2R) * _dy + 1)
+    #     ylimup = ceil(Int, (y + 1.2R) * _dy + 1)
+    #     zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
+    #     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
+
+
     #     Threads.@threads for i in 1:nx
     #         # @show vel, i,j
     #         for j in 1:ny
