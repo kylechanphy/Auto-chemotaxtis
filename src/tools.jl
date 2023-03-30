@@ -127,7 +127,7 @@ end
     v::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
     Fc::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
     field::Array{Float64,3} = zeros(2, 2, 2)
-    flow::Vector{Vector{SVector{2,Float64}}} = [[SA[0.0, 0.0] for _ in 1:2]]
+    flow::Array{SVector{3, Float64}, 3} = Array{SVector{3, Float64}, 3}(undef, 2, 2, 2)
 end
 
 #* Initalse logger 
@@ -160,7 +160,7 @@ end
 function initLogger(part::Particle3D, sysPara)
     logger = Logger3D()
     @unpack pos, ϕ0, θ0, v0, ω0, α, Dr = part
-    @unpack dt, Nstep = sysPara
+    @unpack dt, Nstep, nx, ny, nz = sysPara
 
     v_head = SA[cos(ϕ0)sin(θ0), sin(ϕ0)sin(θ0), cos(θ0)]
     chem_field = zeros(sysPara.nx, sysPara.ny, sysPara.nz)
@@ -170,9 +170,9 @@ function initLogger(part::Particle3D, sysPara)
     all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
 
     if sysPara.flow == false
-        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:2] for _ in 1:2]
+        flow_field =  Array{SVector{3, Float64}, 3}(undef, 2, 2, 2)
     else
-        flow_field = [[SA[0.0, 0.0, 0.0] for _ in 1:2] for _ in 1:2]
+        flow_field = Array{SVector{3, Float64}, 3}(undef, nx, ny, nz)
     end
 
 
@@ -182,7 +182,7 @@ function initLogger(part::Particle3D, sysPara)
     logger.field = chem_field
 
     #! ummodify flow 
-    flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
     logger.flow = flow_field
 
 
