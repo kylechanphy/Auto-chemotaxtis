@@ -1,18 +1,18 @@
 
 function savedir(part, sysPara)
     if part.Dr != 0
-        dir = @sprintf("raw3/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("raw6/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("raw3/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("raw6/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("raw3/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("raw6/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
     end
@@ -26,19 +26,19 @@ end
 
 function savedir(part::Particle3D, sysPara)
     if part.Dr != 0
-        dir = @sprintf("3D/raw4/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("3D/raw6/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
 
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("3D/raw4/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("3D/raw6/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("3D/raw4/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("3D/raw6/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
 
@@ -49,6 +49,35 @@ function savedir(part::Particle3D, sysPara)
 
     return dir
 end
+
+function savedir(partSet::Vector{Particle}, sysPara)
+    part = partSet[1]
+    num = length(partSet)
+    if part.Dr != 0
+        dir = @sprintf("Multiple/raw6/Dr%.5f/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
+            part.Dr, part.Pe, part.α, num,sysPara.dx, sysPara.nx, sysPara.Nstep)
+    else
+
+        if sysPara.flow
+            # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+            # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
+            dir = @sprintf("Multiple/raw6/flow/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
+                part.Pe, part.α, num,sysPara.dx, sysPara.nx, sysPara.Nstep)
+        else
+            # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+            # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
+            dir = @sprintf("Multiple/raw6/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
+                part.Pe, part.α, num, sysPara.dx, sysPara.nx, sysPara.Nstep)
+        end
+
+    end
+
+    dir = updataFileVersion(dir)
+    @show dir
+
+    return dir
+end
+
 
 function updataFileVersion(dir)
     if ispath(dir)
@@ -85,6 +114,19 @@ function savedata!(field, all_pos, all_F, flow, part, sysPara)
 
     # return savedir
 end
+
+function savedata!(logger, partSet::Vector{Particle}, sysPara)
+    # if sysPara.flow
+    #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+    # else
+    #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+    # end
+    data = Dict("field" => logger.field, "pos" => logger.all_pos, "parts"=>partSet, "sysPara" => sysPara)
+    save((sysPara.dir * "/data.jld2"), data)
+
+    # return savedir
+end
+
 
 function dumpTxt(obj, dir)
     open(dir * "/input.txt", "w") do io
@@ -127,9 +169,14 @@ end
     v::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
     Fc::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
     field::Array{Float64,3} = zeros(2, 2, 2)
-    flow::Array{SVector{3, Float64}, 3} = Array{SVector{3, Float64}, 3}(undef, 2, 2, 2)
+    flow::Array{SVector{3,Float64},3} = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
 end
 
+
+@with_kw mutable struct LoggerInteracting
+    all_pos::Vector{Vector{SVector{2,Float64}}} = Array{Vector{SVector{2, Float64}}}(undef, 2)
+    field::Matrix{Float64} = zeros(2, 2)
+end
 #* Initalse logger 
 function initLogger(part::Particle, sysPara)
     logger = Logger()
@@ -170,9 +217,9 @@ function initLogger(part::Particle3D, sysPara)
     all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
 
     if sysPara.flow == false
-        flow_field =  Array{SVector{3, Float64}, 3}(undef, 2, 2, 2)
+        flow_field = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
     else
-        flow_field = Array{SVector{3, Float64}, 3}(undef, nx, ny, nz)
+        flow_field = Array{SVector{3,Float64},3}(undef, nx, ny, nz)
     end
 
 
@@ -184,6 +231,34 @@ function initLogger(part::Particle3D, sysPara)
     #! ummodify flow 
     # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
     logger.flow = flow_field
+
+
+    return logger
+end
+
+#* Initalse Logger interacting 2D
+function initLogger(partSet::Vector{Particle}, sysPara)
+    logger = LoggerInteracting()
+    @unpack v0, ω0, α, Dr = partSet[1]
+    @unpack dt, Nstep = sysPara
+    num = length(partSet)
+
+    chem_field = zeros(sysPara.nx, sysPara.ny)
+
+    all_pos = [[SA[0.0, 0.0] for _ in 1:Nstep] for i in 1:num]
+    # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    for i in eachindex(partSet)
+        all_pos[i][1] = partSet[i].pos
+    end
+
+    logger.all_pos = all_pos
+    # logger.Fc = all_F
+    logger.field = chem_field
+
+
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    # logger.flow = flow_field
 
 
     return logger
@@ -209,7 +284,82 @@ function dumping(logger::Logger3D, s, part::Particle3D, sysPara, logset)
     end
 end
 
+function dumping(logger::LoggerInteracting, s, part, sysPara, logset)
+    if logset.dump_flow == true
+        save((sysPara.dir * "/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
+    end
 
+    if logset.dump_field == true
+        save((sysPara.dir * "/field/field_$(s).jld2"), Dict("field" => logger.field))
+    end
+end
+
+function dumping(static_field, logger::LoggerInteracting, s, part, sysPara, logset)
+    if logset.dump_flow == true
+        save((sysPara.dir * "/flow/flow_$s.jld2"), Dict("flow" => logger.flow))
+    end
+
+    if logset.dump_field == true
+        save((sysPara.dir * "/field/field_$(s).jld2"), Dict("field" => logger.field .+ static_field))
+    end
+end
+
+
+
+function idxPeriodic(idx, lim)
+    if idx <= 0
+        idx = lim + idx
+        idx = idxPeriodic(idx, lim)
+    elseif idx > lim
+        idx = idx - lim
+        idx = idxPeriodic(idx, lim)
+    else
+        return idx
+    end
+end
+
+function distPeriodic(dist, L)
+    dl = abs(dist)
+    if dl > L/2
+        return distPeriodic(L - dl, L)
+        # return L - dl
+    else
+        return dl
+    end
+end
+
+
+#* distance vector form v1 poiting to v2
+function distanceVec(v1, v2, L)
+    vec1 = fold(v1, L)
+    vec2 = fold(v2, L)
+    lx, ly = L
+
+    dx, dy = vec2 - vec1
+
+    return SA[dx-round(dx / lx)*lx, dy - round(dy/ly)*ly]
+end
+
+function fold(x, L)
+    x = x - floor(x / L)* L 
+    return x
+end
+
+function fold(v::SVector, L::Tuple)
+    return  SA[fold(v[1], L[1]),fold(v[2], L[2])]
+end
+
+function meshgrid(x, y)
+    X = repeat(x', length(y), 1)
+    Y = repeat(y, 1, length(x))
+
+
+    return transpose(X), transpose(Y)
+end
+# x(i) = x(i) - floor(x(i) / x_size) * x_size  ! For a box with the origin at the lower left vertex
+# ! Works for x's lying in any image.
+# dx = x(j) - x(i)
+# dx = dx - nint(dx / x_size) * x_size
 
 
 
@@ -301,6 +451,8 @@ function FFT(signal, t)
 
     return freq, F
 end
+
+
 
 
 moving_average(vs, n) = [sum(@view vs[i:(i+n-1)]) / n for i in 1:(length(vs)-(n-1))]

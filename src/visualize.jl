@@ -36,6 +36,48 @@ function viz(u, all_p, sysPara)
     return hm
 end
 
+
+function viz(u, all_p::Vector{Vector{SVector{2, Float64}}}, sysPara)
+    Nx = sysPara.nx
+    Ny = sysPara.ny
+    dx = sysPara.dx
+    dy = sysPara.dy
+
+    hmx = (0:Nx-1) * dy
+    hmy = (0:Ny-1) * dx
+    hm = heatmap(hmx, hmy, transpose(u),
+        xlims=(0, (Nx) * dx), ylims=(0, (Ny) * dy), aspect_ratio=1)
+    for p in all_p    
+        x = [v[1] for v in p]
+        y = [v[2] for v in p]
+    # plot!(circle(part.R, part.pos[1], part.pos[2]), label="", c=:green, fill=1)
+        plot!(hm, x, y, label="", c=:white)
+    end
+    
+    return hm
+end
+
+function viz2(u, all_p::Vector{Vector{SVector{2,Float64}}}, sysPara)
+    Nx = sysPara.nx
+    Ny = sysPara.ny
+    dx = sysPara.dx
+    dy = sysPara.dy
+
+    hmx = (0:Nx-1) * dy
+    hmy = (0:Ny-1) * dx
+    hm = heatmap(hmx, hmy, transpose(u),
+        xlims=(0, (Nx) * dx), ylims=(0, (Ny) * dy), aspect_ratio=1)
+    for p in all_p
+        x = [v[1] for v in p]
+        y = [v[2] for v in p]
+        # plot!(circle(part.R, part.pos[1], part.pos[2]), label="", c=:green, fill=1)
+        # plot!(hm, x, y, label="", c=:white)
+        scatter!([x[end]], [y[end]], color=:green, label="")
+    end
+
+    return hm
+end
+
 function viz(pos::Vector; N=length(pos))
     x = [v[1] for v in pos]
     y = [v[2] for v in pos]
@@ -71,6 +113,8 @@ function viz(pos::Vector{SVector{3, Float64}}, sysPara)
     set_equla_aspect!(fig)
     # scatter!([x[1]], [y[1]], [z[1]])
 end
+
+
 
 
 

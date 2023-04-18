@@ -34,7 +34,7 @@ part.Dr = 0
 part.Pe = 1
 part.D = 1 / part.Pe
 # part.α =5 * 10^2
-part.α = -0
+part.α = -1
 # part.α = 0
 
 sysPara.npoly = 8 #! Must be a multiple of 4
