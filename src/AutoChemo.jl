@@ -63,8 +63,8 @@ function Simulation(sysPara, part::Particle, logset)
     for j in 2:Nstep
         flowField!(flow_field, sysPara, part)
         diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
-        F = getChemForce(dchem_field, sysPara, part)
-        # F = getChemForce2(dchem_field, sysPara, part, surface_vec)
+        # F = getChemForce(dchem_field, sysPara, part)
+        F = getChemForce2(dchem_field, sysPara, part, surface_vec)
         chem_field, dchem_field = dchem_field, chem_field
 
         # all_F[j] = copy(F .* α)
