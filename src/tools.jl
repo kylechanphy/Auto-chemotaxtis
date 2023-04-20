@@ -206,10 +206,10 @@ end
 #* Initalse logger 3D
 function initLogger(part::Particle3D, sysPara)
     logger = Logger3D()
-    @unpack pos, ϕ0, θ0, v0, ω0, α, Dr = part
+    @unpack pos, ϕ, θ, v0, ω0, α, Dr = part
     @unpack dt, Nstep, nx, ny, nz = sysPara
 
-    v_head = SA[cos(ϕ0)sin(θ0), sin(ϕ0)sin(θ0), cos(θ0)]
+    v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
     chem_field = zeros(sysPara.nx, sysPara.ny, sysPara.nz)
 
     all_pos = [pos for _ in 1:Nstep]
@@ -371,6 +371,22 @@ function printStruct(obj)
     end
 end
 
+
+
+function CartesianToSpherical(v)
+    x,y,z = v
+    r = norm(v)
+    θ = acos(z/r)
+    ϕ = sign(y)*acos(x / sqrt(x^2 + y^2))
+    
+    return SA[r, θ, ϕ]
+end
+
+function SphericalToCartesian(v)
+    r, θ, ϕ = v
+
+    return r * SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
+end
 """
 curvature of chemodroplet 
 """

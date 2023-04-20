@@ -25,6 +25,8 @@ include("visualize.jl")
 
 
 
+ξ(dt, Dr) = sqrt(2 * Dr * dt) * randn()
+
 function Simulation(sysPara, part::Particle, logset)
     @unpack pos, ϕ, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
@@ -100,7 +102,7 @@ end
 
 
 function Simulation(sysPara, part::Particle3D, logset)
-    @unpack pos, ϕ0, θ0, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
+    @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
 
     logger = initLogger(part::Particle3D, sysPara)
@@ -117,9 +119,8 @@ function Simulation(sysPara, part::Particle3D, logset)
         inputs = [sysPara, part]
         dumpTxt(inputs, sysPara.dir)
     end
-
     ω_head = SA[cos(ϕ_ω)sin(θ_ω), sin(ϕ_ω)sin(θ_ω), cos(θ_ω)]
-    v_head = SA[cos(ϕ0)sin(θ0), sin(ϕ0)sin(θ0), cos(θ0)]
+    v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
     chem_field = logger.field
     dchem_field = copy(chem_field)
     # chem_field = zeros(sysPara.nx, sysPara.ny)
@@ -144,31 +145,41 @@ function Simulation(sysPara, part::Particle3D, logset)
         chem_field, dchem_field = dchem_field, chem_field
 
         # all_F[j] = copy(F .* α)
-        F = SA[0., 0., 0.]
+        # F = SA[0.0, 0.0, 0.0]
         vel = v_head * v0
 
         part.vel = vel + α * F
         dpos = pos + part.vel * dt
-       
-        ξ = sqrt(2 * Dr * dt)*randn(3)
-        dv_head = @fastmath v_head +  ω0*cross(ω_head, v_head)*dt + cross(ξ, v_head)
-        dω_head = @fastmath ω_head +  cross(ξ, ω_head)
+
+
+        noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+
+        ωx, ωy, ωz = ω0*dt * ω_head
+        torque = RotationVec(ωx, ωy, ωz)
+
+        rot = noise * torque
+
+        dv_head = rot * v_head
+        dω_head = rot * ω_head
+
         dv_head = @fastmath dv_head ./ norm(dv_head)
         dω_head = @fastmath dω_head ./ norm(dω_head)
-        pos, dpos = dpos, pos
-
+        
         v_head, dv_head = dv_head, v_head
         ω_head, dω_head = dω_head, ω_head
 
+        pos, dpos = dpos, pos
 
         part.pos = pos
-        part.v = v_head
+        # # part.v = v_head
+        part.v = ω_head
         # part.ϕ = ϕ
         # part.θ = θ
 
         logger.pos[j] = copy(pos)
         logger.v[j] = copy(v_head)
         logger.Fc[j] = copy(F .* α)
+
 
         if j % logset.every == 0
             dumping(logger, j, part, sysPara, logset)

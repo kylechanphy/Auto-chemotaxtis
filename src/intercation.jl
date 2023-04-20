@@ -86,7 +86,7 @@ function getChemForce2(field, sysPara, part, surface_vec)
     end
 
 
-    return force
+    return force / (2π*R)
 end
 
 
@@ -291,7 +291,7 @@ function getChemForce2(field, sysPara, part::Particle3D, surface_vec)
     # return force / (length(bound_vec[1]) * 7)
 
 
-    return force
+    return force / (4π*R^2)
 end
 
 

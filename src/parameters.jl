@@ -48,8 +48,8 @@ end
     pos::SVector = SA[0.0, 0.0, 0.0]
     vel::SVector = SA[0.0, 0.0, 0.0]
     v::SVector = SA[0.0, 0.0, 0.0]
-    ϕ0::Float64 = 0.0  
-    θ0::Float64 = π/2   
+    ϕ::Float64 = 0.0  
+    θ::Float64 = π/2   
     ϕ_ω::Float64 = 0.0          #* polar angle [0, 2π]
     θ_ω::Float64 = 0.0          #* azimuth angle [0, π]
 end
