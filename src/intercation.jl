@@ -276,21 +276,6 @@ function getChemForce2(field, sysPara, part::Particle3D, surface_vec)
         end
     end
 
-    # len = Int(length(bound_vec[1]) / 2)
-    # for j in 1:7
-    #     for i in 1:len
-    #         pt1 = bound_vec[j][i] .* R
-    #         pt2 = bound_vec[j][len+i] .* R #! always opposite to pt1
-
-    #         F = (sitp(x + pt1[1], y + pt1[2], z + pt1[3]) - sitp(x + pt2[1], y + pt2[2], z + pt2[3])) / 2R #! It is a scaler
-    #         F *= bound_vec[j][i] #! times unit vector
-    #         force += F
-    #     end
-    # end
-
-    # return force / (length(bound_vec[1]) * 7)
-
-
     return force / (4π*R^2)
 end
 
@@ -413,20 +398,16 @@ function genBoundVec(npoly)
 end
 
 
-
+#* normal vector on the surface
 function genBoundVec2(part::Particle)
-    # θ = LinRange(0, π, 10)
     ϕ = LinRange(0, 2π - (2π/30), 30)
     dϕ = ϕ[2] - ϕ[1]
-    # dθ = θ[2] - θ[1]
-
-    # vecs = [[SA[0.0, 0.0, 0.0,] for i in 1:npoly] for j in 1:7]
     unit_vec = Array{SVector{2,Float64},1}(undef, length(ϕ))
-    # for i in 1:length(θ)
-        for j in 1:length(ϕ)
-            unit_vec[j] = SA[cos(ϕ[j]), sin(ϕ[j])]
-        end
-    # end
+
+    for j in 1:length(ϕ)
+        unit_vec[j] = SA[cos(ϕ[j]), sin(ϕ[j])]
+    end
+
 
     return unit_vec, ϕ, dϕ
 end

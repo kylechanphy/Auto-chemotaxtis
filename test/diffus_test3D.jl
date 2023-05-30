@@ -12,16 +12,16 @@ sysPara.nx = 200
 sysPara.ny = 200
 sysPara.nz = 200
 
-sysPara.dx = 0.2
-sysPara.dy = 0.2
-sysPara.dz = 0.2
+sysPara.dx = 0.1
+sysPara.dy = 0.1
+sysPara.dz = 0.1
 
-sysPara.dt = 0.005
+sysPara.dt = 0.00
 
 part.pos = (SA[sysPara.nx/2, sysPara.ny/2, sysPara.nz/2]) .* SA[sysPara.dx, sysPara.dy, sysPara.dz]
 
-part.ϕ0 = 0.0 #* polar angle
-part.θ0 = π/2
+part.ϕ = 0.0 #* polar angle
+part.θ = π/2
 part.ϕ_ω = 0.0
 part.θ_ω = 0.0 
 
@@ -34,8 +34,8 @@ part.Dr = 0
 part.Pe = 1
 part.D = 1 / part.Pe
 # part.α =5 * 10^2
-part.α = -1
-# part.α = 0
+# part.α = -1
+part.α = -0
 
 sysPara.npoly = 8 #! Must be a multiple of 4
 sysPara.Nstep = 1_000
@@ -87,7 +87,7 @@ function diffuseTest()
     logger = Simulation(sysPara, part, logset)
 
     # testPoints = [SA[xi, 2] for xi in -10:sysPara.dx:20]
-    testPoints = [SA[5, 5, zi] for zi in -10:sysPara.dx:10]
+    testPoints = [SA[0, 0, zi] for zi in -5:sysPara.dx:5]
     len = length(testPoints)
     result = zeros(len)
     sim = copy(result)
@@ -95,6 +95,7 @@ function diffuseTest()
     for i in 1:len
         # if i % 10 == 0
         x, y, z = round.(Int, (p0 .+ testPoints[i]) ./ sysPara.dx) .+ 1
+
         sim[i] = logger.field[x, y, z]
         # end
         # result[i] = integal(f, testPoints[i], sysPara.dt * sysPara.Nstep, sysPara.dt, r_prime, part.v0)
@@ -102,10 +103,7 @@ function diffuseTest()
         # x, y = Int.((p0 .+ testPoints[i])./ sysPara.dx) .+ 1
         # comp[i] = u[x, y]
     end
-    # for i in 1:10*sysPara.dx:len
-    #     x, y = Int.((p0 .+ testPoints[Int(i)])./ sysPara.dx) .+ 1
-    #     comp[i] = u[x, y]
-    # end
+
     return result, sim, logger
 end
 result, sim, logger = diffuseTest()

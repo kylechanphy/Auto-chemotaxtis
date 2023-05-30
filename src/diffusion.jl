@@ -77,7 +77,7 @@ end
 
 
 function constFlux!(du, sysPara, part::Particle3D)
-    @unpack nx, ny, dx, dy, dz, dt = sysPara
+    @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
     @unpack pos, R, src = part
 
     _dx, _dy, _dz = 1/dx, 1/dy, 1/dz
@@ -93,11 +93,17 @@ function constFlux!(du, sysPara, part::Particle3D)
     zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
 
+    if xlimup > nx || ylimup > ny || zlimup > nz
+        print("constFlux out of bound")
+    elseif xlimlo < 0 || ylimlo < 0 ny || zlimlo < 0
+        print("constFlux out of bound")
+    end
+        
 
-     for i in xlimlo:xlimup
-       Threads.@threads for j in ylimlo:ylimup
-            for k in zlimlo:zlimup
-            du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy)* ibm4c(abs(y - (k - 1) * dz) * _dz) * _dx3
+    Threads.@threads for k in zlimlo:zlimup
+        for j in ylimlo:ylimup
+            for i in xlimlo:xlimup
+            @inbounds du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy) * ibm4c(abs(z - (k - 1) * dz) * _dz) * _dx3
             end
         end
     end
@@ -132,7 +138,7 @@ function updataGrid!(u, du, sysPara, part)
     Threads.@threads for i in 2:nx-1
         for j in 2:ny-1
 
-            du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
+            @inbounds du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
                                            +
                                            (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) / dy^2)
         end
@@ -147,10 +153,10 @@ function updataGrid!(u, du, sysPara, part::Particle3D)
 
     _dx2, _dy2, _dz2 = 1/dx^2, 1/dy^2, 1/dz^2
     
-    for i in 2:nx-1
-       Threads.@threads for j in 2:ny-1
-            for k in 2:nz-1
-                du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2
+    Threads.@threads for k in 2:nz-1
+         for j in 2:ny-1
+            for i in 2:nx-1
+                @inbounds du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2
                                             +
                                             (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) * _dy2
                                             +
@@ -356,26 +362,26 @@ function NeumannBoundary!(u::Array{Float64,3}, du, sysPara)
     @unpack nx, ny, nz = sysPara
 
     #* X-Y plane
-    Threads.@threads for i in 1:nx
-        for j in 1:ny
-            du[i, j, 1] = (u[i, j, 3] - 4*u[i,j,2]) / 3
-            du[i, j, nz] = (-u[i, j, nz-2] + 4*u[i, j, nz-1])/3
+    Threads.@threads for j in 1:ny
+        for i in 1:nx
+           @views du[i, j, 1] = (u[i, j, 3] - 4*u[i,j,2]) / 3
+           @views du[i, j, nz] = (-u[i, j, nz-2] + 4 * u[i, j, nz-1]) / 3
         end
     end
     
     #* Y-Z plane
-    Threads.@threads for j in 1:ny
-        for k in 1:nz
-            du[1, j, k] = (u[3, j, k] - 4*u[2,j,k])/3
-            du[nx, j, k] = (-u[nx-2, j, k] + 4*u[nx-1, j, k])/3
+    Threads.@threads for k in 1:nz
+        for j in 1:ny
+           @views du[1, j, k] = (u[3, j, k] - 4*u[2,j,k])/3
+           @views du[nx, j, k] = (-u[nx-2, j, k] + 4*u[nx-1, j, k])/3
         end
     end
 
     #* X-Z plane
-    Threads.@threads for i in 1:nx
-        for k in 1:nz
-            du[i, 1, k] = (u[i, 3, k] - 4*u[i,2,k])/3
-            du[i, ny, k] = (-u[i, ny-2, k] + 4*u[i, ny-1, k])/3
+    Threads.@threads for k in 1:nz
+        for i in 1:nx
+           @views du[i, 1, k] = (u[i, 3, k] - 4*u[i,2,k])/3
+           @views du[i, ny, k] = (-u[i, ny-2, k] + 4*u[i, ny-1, k])/3
         end
     end
 end

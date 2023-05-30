@@ -60,6 +60,7 @@ end
     dump_field::Bool = false
     dump_flow::Bool = false
     every::Int = 10
+    prefix::String=""
 
 end
 

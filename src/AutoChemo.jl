@@ -109,7 +109,7 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
     if logset.savedata == true
-        dir = savedir(part, sysPara)
+        dir = savedir(part, sysPara, logset)
         if ispath(dir)
             nothing
         else
@@ -131,15 +131,24 @@ function Simulation(sysPara, part::Particle3D, logset)
     dω_head = copy(ω_head)
     dv_head = copy(v_head)
 
+    logger.pos[1] = copy(pos)
+    logger.v[1] = copy(v_head)
+    # logger.v[1] = copy(ω_head)
+    logger.Fc[1] = copy(SA[0., 0., 0.])
 
     # all_pos = [pos for _ in 1:Nstep]
     # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
     # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
     flow_field = logger.flow
     bound_vec = genBoundVec2(part)
+    if logset.dump_field || logset.dump_flow
+        dumping(logger, 1, part, sysPara, logset)
+    end
     prog = Progress(Nstep - 1, 5) #* progress bar
     for j in 2:Nstep
-        # flowField!(flow_field, sysPara, part)
+
+        #* calucalte chemotactic force
+        flowField!(flow_field, sysPara, part)
         diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
         F = getChemForce2(dchem_field, sysPara, part, bound_vec)
         chem_field, dchem_field = dchem_field, chem_field
@@ -152,12 +161,12 @@ function Simulation(sysPara, part::Particle3D, logset)
         dpos = pos + part.vel * dt
 
 
-        noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+        # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
 
-        ωx, ωy, ωz = ω0*dt * ω_head
+        ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
         torque = RotationVec(ωx, ωy, ωz)
 
-        rot = noise * torque
+        rot = torque
 
         dv_head = rot * v_head
         dω_head = rot * ω_head
@@ -171,13 +180,14 @@ function Simulation(sysPara, part::Particle3D, logset)
         pos, dpos = dpos, pos
 
         part.pos = pos
-        # # part.v = v_head
-        part.v = ω_head
+        part.v = v_head
+        # part.v = ω_head
         # part.ϕ = ϕ
         # part.θ = θ
 
         logger.pos[j] = copy(pos)
         logger.v[j] = copy(v_head)
+        # logger.v[j] = copy(ω_head)
         logger.Fc[j] = copy(F .* α)
 
 
