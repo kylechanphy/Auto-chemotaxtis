@@ -396,52 +396,53 @@ function expandBox(u, du, dims, sysPara, part::Particle3D, logger)
     println("Simulation box expanded in dims=$dims")
 
     x, y, z = part.pos
-
+    expand = 100
     if dims == 1
-        new_u = zeros(nx+50, ny, nz)
+        new_u = zeros(nx + expand, ny, nz)
         new_du = similar(new_u)
         @views new_u[1:nx, :, :] = u
-        sysPara.nx = nx + 50
+        sysPara.nx = nx + expand
 
         
     elseif dims == -1
-        new_u = zeros(nx + 50, ny, nz)
+        new_u = zeros(nx + expand, ny, nz)
         new_du = similar(new_u)
-        @views new_u[51:nx+50, :, :] = u
-        sysPara.nx = nx + 50
+        @views new_u[expand+1:nx+expand, :, :] = u
+        sysPara.nx = nx + expand
         
-        logger.pos .+= (SA[dx*50, 0., 0.],)
-        part.pos += SA[dx*50, 0.0, 0.0]
+        logger.pos .+= (SA[dx*expand, 0.0, 0.0],)
+        part.pos += SA[dx*expand, 0.0, 0.0]
     elseif dims == 2
-        new_u = zeros(nx, ny+50, nz)
+        new_u = zeros(nx, ny + expand, nz)
         new_du = similar(new_u)
         @views new_u[:, 1:ny, :] = u
-        sysPara.ny = ny + 50
+        sysPara.ny = ny + expand
     
     elseif dims == -2
-        new_u = zeros(nx, ny + 50, nz)
+        new_u = zeros(nx, ny + expand, nz)
         new_du = similar(new_u)
-        @views new_u[:, 51:ny+50, :] = u
-        sysPara.ny = ny + 50
+        @views new_u[:, expand+1:ny+expand, :] = u
+        sysPara.ny = ny + expand
     
-        logger.pos .+= (SA[0.0, dy*50, 0.0],)
-        part.pos += SA[0.0, dy*50, 0.0]
+        logger.pos .+= (SA[0.0, dy*expand, 0.0],)
+        part.pos += SA[0.0, dy*expand, 0.0]
 
     elseif dims == 3
-        new_u = zeros(nx, ny, nz+50)
+        new_u = zeros(nx, ny, nz + expand)
         new_du = similar(new_u)
         @views new_u[:, :, 1:nx] = u
-        sysPara.nz = nz + 50
+        sysPara.nz = nz + expand
       
     elseif dims == -3
-        new_u = zeros(nx, ny, nz + 50)
+        new_u = zeros(nx, ny, nz + expand)
         new_du = similar(new_u)
-        @views new_u[:, :, 51:nz+50] = u
-        sysPara.nz = nz + 50
+        @views new_u[:, :, expand+1:nz+expand] = u
+        sysPara.nz = nz + expand
 
-        logger.pos .+= (SA[0.0, 0.0, dz*50], )
-        part.pos += SA[0.0, 0.0, dz*50]
+        logger.pos .+= (SA[0.0, 0.0, dz*expand], )
+        part.pos += SA[0.0, 0.0, dz*expand]
     end
+    @show sysPara.nx, sysPara.ny, sysPara.nz
 
     return new_u, new_du
 end
@@ -451,6 +452,7 @@ function checkbound(u, du, sysPara, part::Particle3D, logger)
     @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
     @unpack pos, R, src = part
 
+    buffer = 50
     # _dx, _dy, _dz = 1 / dx, 1 / dy, 1 / dz
     # _dx3 = 1 / dx^3
     x, y, z = pos #! physical positin
@@ -465,22 +467,22 @@ function checkbound(u, du, sysPara, part::Particle3D, logger)
     zlimup = ceil(Int, (z + R) / dz + 1)
 
     dims = 0
-    if xlimup > nx-25 
+    if xlimup > nx - buffer
         println("out of bound")
         dims = 1
-    elseif ylimup > ny-25 
+    elseif ylimup > ny - buffer
         println("out of bound")
         dims = 2
-    elseif zlimup > nz-25
+    elseif zlimup > nz - buffer
         println("out of bound")
         dims = 3
-    elseif xlimlo < 25 
+    elseif xlimlo < buffer
         println("out of bound")
         dims = -1
-    elseif ylimlo < 25 
+    elseif ylimlo < buffer
         println("out of bound")
         dims = -2
-    elseif zlimlo < 25
+    elseif zlimlo < buffer
         println("out of bound")
         dims = -3
     end
