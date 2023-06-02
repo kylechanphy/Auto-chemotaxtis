@@ -8,7 +8,7 @@ function diffusion!(u, du, flow, sysPara, part)
     # return u, du
 end
 
-function diffusion!(u, du, flow, sysPara, part::Particle3D, logger)
+function diffusion!(u, du, flow, sysPara, part::Particle3D)
     # u, du = constFlux!(u, du, sysPara, part, logger) 
     constFlux!(u, sysPara, part)#* point sources with constant rate
     updataGrid!(u, du, sysPara, part)
@@ -94,39 +94,6 @@ function constFlux!(u, sysPara, part::Particle3D)
     zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
 
-    # dims = 0
-    # if xlimup > nx-25 
-    #     println("constFlux out of bound")
-    #     dims = 1
-    # elseif ylimup > ny-25 
-    #     println("constFlux out of bound")
-    #     dims = 2
-    # elseif zlimup > nz-25
-    #     println("constFlux out of bound")
-    #     dims = 3
-    # elseif xlimlo < 25 
-    #     println("constFlux out of bound")
-    #     dims = -1
-    # elseif ylimlo < 25 
-    #     println("constFlux out of bound")
-    #     dims = -2
-    # elseif zlimlo < 25
-    #     println("constFlux out of bound")
-    #     dims = -3
-    # end
-
-    # if dims != 0
-    #     u, du = expandBox(u, du, dims, sysPara, part, logger)
-    #     x, y, z = part.pos
-    #     xlimlo = floor(Int, (x - 1.2R) * _dx + 1)
-    #     xlimup = ceil(Int, (x + 1.2R) * _dx + 1)
-    #     ylimlo = floor(Int, (y - 1.2R) * _dy + 1)
-    #     ylimup = ceil(Int, (y + 1.2R) * _dy + 1)
-    #     zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
-    #     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
-    # end
-
-        
 
     Threads.@threads for k in zlimlo:zlimup
         for j in ylimlo:ylimup
