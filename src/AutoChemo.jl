@@ -149,6 +149,7 @@ function Simulation(sysPara, part::Particle3D, logset)
 
         #* calucalte chemotactic force
         flowField!(flow_field, sysPara, part)
+        # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
         diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
         F = getChemForce2(dchem_field, sysPara, part, bound_vec)
         chem_field, dchem_field = dchem_field, chem_field
@@ -158,7 +159,7 @@ function Simulation(sysPara, part::Particle3D, logset)
         vel = v_head * v0
 
         part.vel = vel + α * F
-        dpos = pos + part.vel * dt
+        dpos = part.pos + part.vel * dt
 
 
         # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
@@ -177,15 +178,18 @@ function Simulation(sysPara, part::Particle3D, logset)
         v_head, dv_head = dv_head, v_head
         ω_head, dω_head = dω_head, ω_head
 
-        pos, dpos = dpos, pos
+        part.pos, dpos = dpos, part.pos
 
-        part.pos = pos
+        # part.pos = pos
         part.v = v_head
         # part.v = ω_head
         # part.ϕ = ϕ
         # part.θ = θ
 
-        logger.pos[j] = copy(pos)
+        chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+
+
+        logger.pos[j] = copy(part.pos)
         logger.v[j] = copy(v_head)
         # logger.v[j] = copy(ω_head)
         logger.Fc[j] = copy(F .* α)

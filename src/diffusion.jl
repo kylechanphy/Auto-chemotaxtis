@@ -8,8 +8,9 @@ function diffusion!(u, du, flow, sysPara, part)
     # return u, du
 end
 
-function diffusion!(u, du, flow, sysPara, part::Particle3D)
-    constFlux!(u, sysPara, part) #* point sources with constant rate
+function diffusion!(u, du, flow, sysPara, part::Particle3D, logger)
+    # u, du = constFlux!(u, du, sysPara, part, logger) 
+    constFlux!(u, sysPara, part)#* point sources with constant rate
     updataGrid!(u, du, sysPara, part)
     # DirichletBoundary!(du, sysPara)
     NeumannBoundary!(u, du, sysPara)
@@ -76,7 +77,7 @@ function constFlux_periodic!(du, sysPara, part)
 end
 
 
-function constFlux!(du, sysPara, part::Particle3D)
+function constFlux!(u, sysPara, part::Particle3D)
     @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
     @unpack pos, R, src = part
 
@@ -93,20 +94,49 @@ function constFlux!(du, sysPara, part::Particle3D)
     zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
 
-    if xlimup > nx || ylimup > ny || zlimup > nz
-        print("constFlux out of bound")
-    elseif xlimlo < 0 || ylimlo < 0 ny || zlimlo < 0
-        print("constFlux out of bound")
-    end
+    # dims = 0
+    # if xlimup > nx-25 
+    #     println("constFlux out of bound")
+    #     dims = 1
+    # elseif ylimup > ny-25 
+    #     println("constFlux out of bound")
+    #     dims = 2
+    # elseif zlimup > nz-25
+    #     println("constFlux out of bound")
+    #     dims = 3
+    # elseif xlimlo < 25 
+    #     println("constFlux out of bound")
+    #     dims = -1
+    # elseif ylimlo < 25 
+    #     println("constFlux out of bound")
+    #     dims = -2
+    # elseif zlimlo < 25
+    #     println("constFlux out of bound")
+    #     dims = -3
+    # end
+
+    # if dims != 0
+    #     u, du = expandBox(u, du, dims, sysPara, part, logger)
+    #     x, y, z = part.pos
+    #     xlimlo = floor(Int, (x - 1.2R) * _dx + 1)
+    #     xlimup = ceil(Int, (x + 1.2R) * _dx + 1)
+    #     ylimlo = floor(Int, (y - 1.2R) * _dy + 1)
+    #     ylimup = ceil(Int, (y + 1.2R) * _dy + 1)
+    #     zlimlo = floor(Int, (z - 1.2R) * _dz + 1)
+    #     zlimup = ceil(Int, (z + 1.2R) * _dz + 1)
+    # end
+
         
 
     Threads.@threads for k in zlimlo:zlimup
         for j in ylimlo:ylimup
             for i in xlimlo:xlimup
-            @inbounds du[i, j, k] = du[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy) * ibm4c(abs(z - (k - 1) * dz) * _dz) * _dx3
+            @inbounds u[i, j, k] = u[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy) * ibm4c(abs(z - (k - 1) * dz) * _dz) * _dx3
             end
         end
     end
+
+    # return u, du
 end
 
 

@@ -387,6 +387,114 @@ function SphericalToCartesian(v)
 
     return r * SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
 end
+
+"""
+Expanding simulatiom box
+"""
+function expandBox(u, du, dims, sysPara, part::Particle3D, logger)
+    @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
+    println("Simulation box expanded in dims=$dims")
+
+    x, y, z = part.pos
+
+    if dims == 1
+        new_u = zeros(nx+50, ny, nz)
+        new_du = similar(new_u)
+        @views new_u[1:nx, :, :] = u
+        sysPara.nx = nx + 50
+
+        
+    elseif dims == -1
+        new_u = zeros(nx + 50, ny, nz)
+        new_du = similar(new_u)
+        @views new_u[51:nx+50, :, :] = u
+        sysPara.nx = nx + 50
+        
+        logger.pos .+= (SA[dx*50, 0., 0.],)
+        part.pos += SA[dx*50, 0.0, 0.0]
+    elseif dims == 2
+        new_u = zeros(nx, ny+50, nz)
+        new_du = similar(new_u)
+        @views new_u[:, 1:ny, :] = u
+        sysPara.ny = ny + 50
+    
+    elseif dims == -2
+        new_u = zeros(nx, ny + 50, nz)
+        new_du = similar(new_u)
+        @views new_u[:, 51:ny+50, :] = u
+        sysPara.ny = ny + 50
+    
+        logger.pos .+= (SA[0.0, dy*50, 0.0],)
+        part.pos += SA[0.0, dy*50, 0.0]
+
+    elseif dims == 3
+        new_u = zeros(nx, ny, nz+50)
+        new_du = similar(new_u)
+        @views new_u[:, :, 1:nx] = u
+        sysPara.nz = nz + 50
+      
+    elseif dims == -3
+        new_u = zeros(nx, ny, nz + 50)
+        new_du = similar(new_u)
+        @views new_u[:, :, 51:nz+50] = u
+        sysPara.nz = nz + 50
+
+        logger.pos .+= (SA[0.0, 0.0, dz*50], )
+        part.pos += SA[0.0, 0.0, dz*50]
+    end
+
+    return new_u, new_du
+end
+
+
+function checkbound(u, du, sysPara, part::Particle3D, logger)
+    @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
+    @unpack pos, R, src = part
+
+    # _dx, _dy, _dz = 1 / dx, 1 / dy, 1 / dz
+    # _dx3 = 1 / dx^3
+    x, y, z = pos #! physical positin
+
+
+    #! grid coordinate, julia array start from 1
+    xlimlo = floor(Int, (x - R) / dx + 1)
+    xlimup = ceil(Int, (x + R) / dx + 1)
+    ylimlo = floor(Int, (y - R) / dy + 1)
+    ylimup = ceil(Int, (y + R) / dy + 1)
+    zlimlo = floor(Int, (z - R) / dz + 1)
+    zlimup = ceil(Int, (z + R) / dz + 1)
+
+    dims = 0
+    if xlimup > nx-25 
+        println("out of bound")
+        dims = 1
+    elseif ylimup > ny-25 
+        println("out of bound")
+        dims = 2
+    elseif zlimup > nz-25
+        println("out of bound")
+        dims = 3
+    elseif xlimlo < 25 
+        println("out of bound")
+        dims = -1
+    elseif ylimlo < 25 
+        println("out of bound")
+        dims = -2
+    elseif zlimlo < 25
+        println("out of bound")
+        dims = -3
+    end
+
+    if dims != 0
+        u, du = expandBox(u, du, dims, sysPara, part, logger)
+    end
+
+    return u, du
+end
+
+
+
+
 """
 curvature of chemodroplet 
 """
