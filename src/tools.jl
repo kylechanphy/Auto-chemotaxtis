@@ -414,6 +414,22 @@ function ACF(vel::Vector{SVector{2,Float64}}, lags)
     # end
     return lag, out
 end
+function ACF(vel::Vector{SVector{3,Float64}}, lags)
+    lag = [v for v in 0:lags]
+    out = zeros(lags + 1)
+    ns = length(vel) - lags
+    # for k in 1:ns
+    zz = dot(view(vel, 1:ns), view(vel, 1:ns)) / ns
+    for k in 0:lags
+        # for j in 1:ns
+        out[k+1] = dot(view(vel, 1:ns), view(vel, 1+k:ns+k))
+        # out += [@views (dot(vel[k], vel[k+i]) ./ (norm(vel[k])^2)) for i in 0:lags]
+        # end
+    end
+    out = out / zz / ns
+    # end
+    return lag, out
+end
 
 # function ACF2(vel::Vector{SVector{2,Float64}}, lags)
 #     lag = [v for v in 0:lags]

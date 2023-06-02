@@ -65,6 +65,14 @@ function getChemForce2(field, sysPara, part, surface_vec)
     ylimlo = max(ylimlo, 1)
     ylimup = min(ylimup, ny)
 
+    if xlimup > nx || ylimup > ny || zlimup > nz
+        print("getForce out of bound")
+    elseif xlimlo < 0 || ylimlo < 0
+        ny || zlimlo < 0
+        print("getForce out of bound")
+    end
+
+
     #* values for interpolation 
     refpoint = [field[i, j] for i in xlimlo:xlimup, j in ylimlo:ylimup]
 
