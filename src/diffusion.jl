@@ -165,8 +165,8 @@ end
 function updataGrid!(u, du, sysPara, part)
     @unpack dx, dy, dt, nx, ny = sysPara
     @unpack  D = part
-    Threads.@threads for i in 2:nx-1
-        for j in 2:ny-1
+    Threads.@threads for j in 2:ny-1
+        for i in 2:nx-1
 
             @inbounds du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
                                            +
@@ -201,10 +201,10 @@ end
 function updataGridAdvection!(u, du, flow, sysPara, part)
     @unpack dx, dy, dt, nx, ny = sysPara
     @unpack pos, R, D = part
-    Threads.@threads for i in 2:nx-1
-        for j in 2:ny-1
+    Threads.@threads for j in 2:ny-1
+        for i in 2:nx-1
 
-            du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2 - ((u[i+1, j] - u[i-1, j] / 2dx)) * flow[i][j][1]
+            @inbounds du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2 - ((u[i+1, j] - u[i-1, j] / 2dx)) * flow[i][j][1]
                                            +
                                            (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) / dy^2 - ((u[i, j+1] - u[i, j-1] / 2dy)) * flow[i][j][2])
         end
@@ -212,21 +212,21 @@ function updataGridAdvection!(u, du, flow, sysPara, part)
 end
 
 #! unchange
-function updataGridAdvection!(u, du, flow, sysPara, part::Particle3D)
-    @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
-    @unpack pos, R, D = part
-    for i in 2:nx-1
-        Threads.@threads for j in 2:ny-1
-            for k in 2:nz-1
-                du[i, j, k ] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) / dx^2 - ((u[i+1, j, k] - u[i-1, j, k] / 2dx)) * flow[i][j][k][1]
-                                            +
-                                            (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) / dy^2 - ((u[i, j+1, k] - u[i, j-1, k] / 2dy)) * flow[i][j][k][2]
-                                            +
-                                            (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) / dz^2 - ((u[i, j, k+1] - u[i, j, k-1] / 2dz)) * flow[i][j][k][3])
-            end
-        end
-    end
-end
+# function updataGridAdvection!(u, du, flow, sysPara, part::Particle3D)
+#     @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
+#     @unpack pos, R, D = part
+#     for i in 2:nx-1
+#         Threads.@threads for j in 2:ny-1
+#             for k in 2:nz-1
+#                 du[i, j, k ] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) / dx^2 - ((u[i+1, j, k] - u[i-1, j, k] / 2dx)) * flow[i][j][k][1]
+#                                             +
+#                                             (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) / dy^2 - ((u[i, j+1, k] - u[i, j-1, k] / 2dy)) * flow[i][j][k][2]
+#                                             +
+#                                             (u[i, j, k+1] - 2 * u[i, j, k] + u[i, j, k-1]) / dz^2 - ((u[i, j, k+1] - u[i, j, k-1] / 2dz)) * flow[i][j][k][3])
+#             end
+#         end
+#     end
+# end
 
 
 #= 
