@@ -1,23 +1,23 @@
 
 function savedir(part, sysPara)
     if part.Dr != 0
-        dir = @sprintf("raw7/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("raw7/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("raw7/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
     end
     # @show dir
-    dir = updataFileVersion(dir)
+    dir = logset.prefix * updataFileVersion(dir)
     @show dir
     return dir
 end
@@ -26,28 +26,28 @@ end
 
 function savedir(part::Particle3D, sysPara, logset)
     if part.Dr != 0
-        dir = @sprintf("3D/raw7/Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = @sprintf("Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
 
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("3D/raw7/flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("3D/raw7/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = @sprintf("Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
 
     end
 
-    dir = updataFileVersion(dir)
+    dir = logset.prefix * updataFileVersion(dir)
     @show dir
 
-    return logset.prefix * dir
+    return  dir
 end
 
 function savedir(partSet::Vector{Particle}, sysPara)
@@ -72,7 +72,7 @@ function savedir(partSet::Vector{Particle}, sysPara)
 
     end
 
-    dir = updataFileVersion(dir)
+    dir = logset.prefix * updataFileVersion(dir)
     @show dir
 
     return dir
@@ -430,7 +430,7 @@ function expandBox(u, du, dims, sysPara, part::Particle3D, logger)
     elseif dims == 3
         new_u = zeros(nx, ny, nz + expand)
         new_du = similar(new_u)
-        @views new_u[:, :, 1:nx] = u
+        @views new_u[:, :, 1:nz] = u
         sysPara.nz = nz + expand
       
     elseif dims == -3
@@ -452,7 +452,7 @@ function checkbound(u, du, sysPara, part::Particle3D, logger)
     @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
     @unpack pos, R, src = part
 
-    buffer = 50
+    buffer = 100
     # _dx, _dy, _dz = 1 / dx, 1 / dy, 1 / dz
     # _dx3 = 1 / dx^3
     x, y, z = pos #! physical positin

@@ -96,7 +96,7 @@ function set_equla_aspect!(fig)
 end
 
 
-function viz(pos::Vector{SVector{3, Float64}}, sysPara)
+function viz(pos::Vector{SVector{3, Float64}}, sysPara; savetxt=true)
     dt = sysPara.dt
     skip = 100
     x = [v[1] for v in pos]
@@ -113,8 +113,38 @@ function viz(pos::Vector{SVector{3, Float64}}, sysPara)
         color=:viridis)
     # plot!(aspect_ratio=:equal)
     set_equla_aspect!(fig)
+
+    if savetxt == true
+        dir = sysPara.dir
+        writedlm(dir * "/traj.txt", [t[1:skip:end] x[1:skip:end] y[1:skip:end] z[1:skip:end]])
+    end
+    # scatter!([x[1]], [y[1]], [z[1]])
+    return fig
+end
+
+
+
+function viz_clip(pos::Vector{SVector{3,Float64}}, sysPara, clip=[10_000, 50_000])
+    dt = sysPara.dt
+    skip = 100
+    x = [v[1] for v in pos][clip[1]:clip[2]]
+    y = [v[2] for v in pos][clip[1]:clip[2]]
+    z = [v[3] for v in pos][clip[1]:clip[2]]
+    N = length(x)
+    t = 0:dt:dt*(N-1)
+
+
+    fig = plot(x[1:skip:end], y[1:skip:end], z[1:skip:end], label="",
+        # xlabel="x", ylabel="y", zlabel="z",
+        aspect_ratio=:equal,
+        line_z=t[1:skip:end],
+        color=:viridis,
+        grid=0, axis=false, ticks=false)
+    # plot!(aspect_ratio=:equal)
+    set_equla_aspect!(fig)
     # scatter!([x[1]], [y[1]], [z[1]])
 end
+
 
 
 
