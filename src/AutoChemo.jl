@@ -12,6 +12,7 @@ using Printf
 using Rotations
 using Measures
 using LaTeXStrings
+using DelimitedFiles
 
 
 
@@ -180,11 +181,8 @@ function Simulation(sysPara, part::Particle3D, logset)
 
         part.pos, dpos = dpos, part.pos
 
-        # part.pos = pos
         part.v = v_head
-        # part.v = ω_head
-        # part.ϕ = ϕ
-        # part.θ = θ
+
 
         chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
 
@@ -302,4 +300,5 @@ function randVec()
     v = randn(3)
     # return @fastmath v ./ norm(v)
     return v
-end
+end 
+

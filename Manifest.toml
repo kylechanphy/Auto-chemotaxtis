@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "8633a66a07d7676680735ce417d52c667279983c"
+project_hash = "6b6806daad2a38bb739a79954b6cf0a61b660d61"
 
 [[deps.AbstractFFTs]]
 deps = ["ChainRulesCore", "LinearAlgebra"]
@@ -15,6 +15,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "0310e08cb19f5da31d08341c6120c047598f5b9c"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.5.0"
+
+[[deps.AngleBetweenVectors]]
+deps = ["LinearAlgebra", "Test"]
+git-tree-sha1 = "7f45b5788f4800959a352b5e2c5fdebacf09627c"
+uuid = "ec570357-d46e-52ed-9726-18773498274d"
+version = "0.3.0"
 
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
