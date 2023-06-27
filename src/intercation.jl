@@ -85,6 +85,17 @@ function getChemForce2(field, sysPara, part, surface_vec)
     return force / (2π*R)
 end
 
+"""
+Calculate the chemical force by green function 
+"""
+#* green function of diffusion equation
+function kernal3D(r, r_prime, t, t_prime, D, dim)
+    d = dim
+    dr = norm(r - r_prime)
+    return exp(-(dr)^2 / (4 * D * (t - t_prime))) / (4π * D * (t - t_prime))^(d/2)
+end
+function getChemForceGreen(sysPara, part, logger)
+end
 
 function getChemForce_periodic(field, sysPara, part)
     @unpack pos, R, = part

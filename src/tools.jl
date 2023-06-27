@@ -1,23 +1,23 @@
 
 function savedir(part, sysPara)
     if part.Dr != 0
-        dir = @sprintf("Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = logset.prefix * @sprintf("Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = logset.prefix * @sprintf("flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = logset.prefix * @sprintf("Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
     end
     # @show dir
-    dir = logset.prefix * updataFileVersion(dir)
+    dir = updataFileVersion(dir)
     @show dir
     return dir
 end
@@ -26,25 +26,25 @@ end
 
 function savedir(part::Particle3D, sysPara, logset)
     if part.Dr != 0
-        dir = @sprintf("Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
+        dir = logset.prefix * @sprintf("Dr%.5f/Pe%s/a%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
 
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = logset.prefix * @sprintf("flow/Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("Pe%s/a%s_dx%.3f_nx%s_N%s",
+            dir = logset.prefix * @sprintf("Pe%s/a%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
 
     end
 
-    dir = logset.prefix * updataFileVersion(dir)
+    dir =  updataFileVersion(dir)
     @show dir
 
     return  dir
@@ -54,25 +54,25 @@ function savedir(partSet::Vector{Particle}, sysPara)
     part = partSet[1]
     num = length(partSet)
     if part.Dr != 0
-        dir = @sprintf("Multiple/raw6/Dr%.5f/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
+        dir = logset.prefix * @sprintf("Multiple/raw6/Dr%.5f/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
             part.Dr, part.Pe, part.α, num,sysPara.dx, sysPara.nx, sysPara.Nstep)
     else
 
         if sysPara.flow
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/flow_D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("Multiple/raw6/flow/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
+            dir = logset.prefix * @sprintf("Multiple/raw6/flow/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, num,sysPara.dx, sysPara.nx, sysPara.Nstep)
         else
             # dir = "raw2/Pe$(1/part.D)_w$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
             # dir = @printf("raw2/Pe$(1/part.D)_w$(part.ω0)/D%.4f_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)", part.D)
-            dir = @sprintf("Multiple/raw6/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
+            dir = logset.prefix * @sprintf("Multiple/raw6/Pe%s/a%s_Np%s_dx%.3f_nx%s_N%s",
                 part.Pe, part.α, num, sysPara.dx, sysPara.nx, sysPara.Nstep)
         end
 
     end
 
-    dir = logset.prefix * updataFileVersion(dir)
+    dir =  updataFileVersion(dir)
     @show dir
 
     return dir

@@ -37,7 +37,6 @@ function Simulation(sysPara, part::Particle, logset)
     if logset.savedata == true
         dir = savedir(part, sysPara)
         if ispath(dir)
-
             nothing
         else
             mkpath(dir)
@@ -117,6 +116,7 @@ function Simulation(sysPara, part::Particle3D, logset)
             mkpath(dir)
         end
         sysPara.dir = dir
+        @show sysPara.dir
         inputs = [sysPara, part]
         dumpTxt(inputs, sysPara.dir)
     end
