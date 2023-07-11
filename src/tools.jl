@@ -127,6 +127,16 @@ function savedata!(logger, partSet::Vector{Particle}, sysPara)
     # return savedir
 end
 
+"""
+Write a julio Dict to txt file with key name and value
+"""
+function dict2txt(dict, dir)
+    open(dir, "w") do io
+        for key in keys(dict)
+            write(io, "$key = $(dict[key])\n")
+        end
+    end
+end
 
 function dumpTxt(obj, dir)
     open(dir * "/input.txt", "w") do io
