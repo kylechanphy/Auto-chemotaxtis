@@ -147,8 +147,13 @@ function Simulation(sysPara, part::Particle3D, logset)
     end
     prog = Progress(Nstep - 1, 5) #* progress bar
 
-    T = 3 * 2π / ω0
-    NT =  minimum([floor(Int64, T/dt), Nstep])  
+    if ω0 != 0
+        T = 3 * 2π / ω0
+        NT =  minimum([floor(Int64, T/dt), Nstep])  
+    else
+        NT = 1000
+    end
+    
     for j in 2:NT
         #* calucalte chemotactic force
         flowField!(flow_field, sysPara, part)

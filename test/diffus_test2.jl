@@ -3,7 +3,6 @@ Pkg.activate(".")
 include("../src/AutoChemo.jl")
 
 using JLD2
-
 part = Particle()
 sysPara = SysPara()
 logset = LoggerSetting()
@@ -99,8 +98,22 @@ function diffuseTest()
     #     x, y = Int.((p0 .+ testPoints[Int(i)])./ sysPara.dx) .+ 1
     #     comp[i] = u[x, y]
     # end
-    return result, sim
+    return result, sim, testPoints
 end
-result, sim = diffuseTest()
-plot(result, label="theary")
-plot!(sim, label="sim")
+result, sim, testPoints = diffuseTest()
+
+
+y = [v[2] for v in testPoints]
+
+fig = plot(y, result, label="Theary", framestyle=:box)
+# plot!(fig, y, sim, label="Simulation")
+scatter!(fig, y[1:2:end], sim[1:2:end], markershape=:circle, c=2, label="Simulation")
+plot!(fig, xlabel=L"y", ylabel=L"C",
+        legendfontsize=12,
+        guidefontsize=18,
+        tickfontsize=16,
+        fg_legend=:transparent,
+        grid=false
+        )
+
+savefig("paper/diffus_test/diff_test2D.svg")

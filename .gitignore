@@ -9,6 +9,7 @@ single_droplet.jl
 ################################################################################
 
 # Folders to ignore - files may be too large, too many, etc. NOTE: EDIT IF NEEDED.
+.CondaPkg
 data
 raw
 raw2
@@ -32,6 +33,8 @@ script
 *.7z
 *.svg
 *.txt
+
+
 
 ################################################################################
 #                                    Julia                                     #
