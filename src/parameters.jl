@@ -15,8 +15,6 @@
 
     flow::Bool = false
 
-    perturbation = false
-
     dir::String = ""
 end
 

@@ -8,15 +8,15 @@ part = Particle3D()
 sysPara = SysPara()
 logset = LoggerSetting()
 
-sysPara.nx = 200
-sysPara.ny = 200
-sysPara.nz = 200
+sysPara.nx = 400
+sysPara.ny = 400
+sysPara.nz = 400
 
 sysPara.dx = 0.1
 sysPara.dy = 0.1
 sysPara.dz = 0.1
 
-sysPara.dt = 0.00
+sysPara.dt = 0.001
 
 part.pos = (SA[sysPara.nx/2, sysPara.ny/2, sysPara.nz/2]) .* SA[sysPara.dx, sysPara.dy, sysPara.dz]
 
@@ -104,8 +104,23 @@ function diffuseTest()
         # comp[i] = u[x, y]
     end
 
-    return result, sim, logger
+    return result, sim, logger, testPoints
 end
-result, sim, logger = diffuseTest()
-plot(result, label="theary")
-plot!(sim, label="sim")
+result, sim, logger, testPoints = diffuseTest()
+
+
+
+z = [v[3] for v in testPoints]
+
+fig = plot(z, result, label="Theary", framestyle=:box)
+# plot!(fig, y, sim, label="Simulation")
+scatter!(fig, z[1:2:end], sim[1:2:end], markershape=:circle, c=2, label="Simulation")
+plot!(fig, xlabel=L"z", ylabel=L"C",
+        legendfontsize=12,
+        guidefontsize=18,
+        tickfontsize=16,
+        fg_legend=:transparent,
+        grid=false
+        )
+
+savefig(fig, "paper/diffus_test/diff_test3D.svg")
