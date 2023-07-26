@@ -148,14 +148,8 @@ function Simulation(sysPara, part::Particle3D, logset)
     prog = Progress(Nstep - 1, 5) #* progress bar
     for j in 2:Nstep
 
-<<<<<<< HEAD
-    if ω0 != 0
-        T = 3 * 2π / ω0
-        NT =  minimum([floor(Int64, T/dt), Nstep])  
-    else
-        NT = 1000
-    end
-    
+    T = 3 * 2π / ω0
+    NT =  minimum([floor(Int64, T/dt), Nstep])  
     for j in 2:NT
 =======
 >>>>>>> parent of 863b939d (perturbation)
