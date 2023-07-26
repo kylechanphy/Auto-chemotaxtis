@@ -145,14 +145,17 @@ function Simulation(sysPara, part::Particle3D, logset)
     if logset.dump_field || logset.dump_flow
         dumping(logger, 1, part, sysPara, logset)
     end
-    prog = Progress(Nstep - 1, 5) #* progress bar
-    for j in 2:Nstep
 
-    T = 3 * 2π / ω0
-    NT =  minimum([floor(Int64, T/dt), Nstep])  
+    if ω0 != 0
+        T = 3 * 2π / ω0
+        NT = minimum([floor(Int64, T / dt), Nstep])
+    else
+        NT = 1000
+    end
+
+    prog = Progress(Nstep - 1, 5) #* progress bar
     for j in 2:NT
-=======
->>>>>>> parent of 863b939d (perturbation)
+
         #* calucalte chemotactic force
         flowField!(flow_field, sysPara, part)
         # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
@@ -170,7 +173,7 @@ function Simulation(sysPara, part::Particle3D, logset)
 
         # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
 
-        ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, 1/500), ξ(dt, 1/500), ξ(dt, 1/500)]
         torque = RotationVec(ωx, ωy, ωz)
 
         rot = torque
@@ -204,6 +207,63 @@ function Simulation(sysPara, part::Particle3D, logset)
 
         next!(prog) #* progress bar
     end
+
+    if Nstep > NT
+        for j in NT+1 : Nstep
+
+            #* calucalte chemotactic force
+            flowField!(flow_field, sysPara, part)
+            # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
+            diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
+            F = getChemForce2(dchem_field, sysPara, part, bound_vec)
+            chem_field, dchem_field = dchem_field, chem_field
+
+            # all_F[j] = copy(F .* α)
+            # F = SA[0.0, 0.0, 0.0]
+            vel = v_head * v0
+
+            part.vel = vel + α * F
+            dpos = part.pos + part.vel * dt
+
+
+            # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+
+            ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+            torque = RotationVec(ωx, ωy, ωz)
+
+            rot = torque
+
+            dv_head = rot * v_head
+            dω_head = rot * ω_head
+
+            dv_head = @fastmath dv_head ./ norm(dv_head)
+            dω_head = @fastmath dω_head ./ norm(dω_head)
+
+            v_head, dv_head = dv_head, v_head
+            ω_head, dω_head = dω_head, ω_head
+
+            part.pos, dpos = dpos, part.pos
+
+            part.v = v_head
+
+
+            chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+
+
+            logger.pos[j] = copy(part.pos)
+            logger.v[j] = copy(v_head)
+            # logger.v[j] = copy(ω_head)
+            logger.Fc[j] = copy(F .* α)
+
+
+            if j % logset.every == 0
+                dumping(logger, j, part, sysPara, logset)
+            end
+
+            next!(prog) #* progress bar
+        end
+    end
+
 
     if logset.savedata == true
         savedata!(logger.field, logger.pos, logger.Fc, logger.flow, part, sysPara)
