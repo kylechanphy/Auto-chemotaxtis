@@ -25,6 +25,7 @@ plots
 notebooks
 _research
 sub
+sub_arr
 .vscode
 script
 *.err
