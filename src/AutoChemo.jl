@@ -70,7 +70,8 @@ function Simulation(sysPara, part::Particle, logset)
         chem_field, dchem_field = dchem_field, chem_field
 
         # all_F[j] = copy(F .* α)
-        vel = SA[cos(ϕ), sin(ϕ)] * v0
+        heat = SA[cos(ϕ), sin(ϕ)]
+        vel = heat * v0
 
         part.vel = vel + α * F
         dpos = pos + part.vel * dt
@@ -83,6 +84,7 @@ function Simulation(sysPara, part::Particle, logset)
         part.ϕ = ϕ
 
         logger.pos[j] = copy(pos)
+        logger.phi[j] = copy(ϕ)
         logger.Fc[j] = copy(F .* α)
 
         if j % logset.every == 0
@@ -93,7 +95,7 @@ function Simulation(sysPara, part::Particle, logset)
     end
 
     if logset.savedata == true
-        savedata!(logger.field, logger.pos, logger.Fc, logger.flow, part, sysPara)
+        savedata!(logger.field, logger.pos, logger.phi, logger.Fc, logger.flow, part, sysPara)
     end
     # return chem_field, all_pos, all_F, flow_field, logger
     return logger
@@ -172,10 +174,13 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
         # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+        if sysPara.perturbation == true
+            ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, 1/500), ξ(dt, 1/500), ξ(dt, 1/500)]
+        else
+            ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        end
 
-        ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, 1/500), ξ(dt, 1/500), ξ(dt, 1/500)]
         torque = RotationVec(ωx, ωy, ωz)
-
         rot = torque
 
         dv_head = rot * v_head
@@ -196,7 +201,8 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
         logger.pos[j] = copy(part.pos)
-        logger.v[j] = copy(v_head)
+        logger.vhead[j] = copy(v_head)
+        logger.dwhead[j] = copy(ω_head)
         # logger.v[j] = copy(ω_head)
         logger.Fc[j] = copy(F .* α)
 
@@ -251,7 +257,8 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
             logger.pos[j] = copy(part.pos)
-            logger.v[j] = copy(v_head)
+            logger.vhead[j] = copy(v_head)
+            logger.dwhead[j] = copy(ω_head)
             # logger.v[j] = copy(ω_head)
             logger.Fc[j] = copy(F .* α)
 
@@ -266,12 +273,11 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
     if logset.savedata == true
-        savedata!(logger.field, logger.pos, logger.Fc, logger.flow, part, sysPara)
+        savedata!(logger.field, logger.pos, logger.vhead, logger.dwhead, logger.Fc, logger.flow, part, sysPara)
     end
     # return chem_field, all_pos, all_F, flow_field, logger
     return logger
 end
-
 
 
 function Simulation(sysPara, partSet::Vector{Particle}, logset)

@@ -476,8 +476,8 @@ function Deff_sim(Dr_list)
                 ps[tid()].ω0 = 1
                 ps[tid()].v0 = 1
                 # loggers[tid] 
-                # loggers[tid()] = Simulation_ABP3D_test(sysPara, ps[tid()], logset)
-                loggers[tid()] = Simulation_CAP3D_test(sysPara, ps[tid()], logset)
+                loggers[tid()] = Simulation_ABP3D_test(sysPara, ps[tid()], logset)
+                # loggers[tid()] = Simulation_CAP3D_test(sysPara, ps[tid()], logset)
                 
                 MSD_th[tid()] += squard_dis(loggers[tid()].pos)
                 # MSD_th[tid()] += squard_disXY(loggers[tid()].pos)
@@ -512,9 +512,9 @@ end
 Deff(v0, Dr, d=3) = (v0^2) / (d * (d - 1) * Dr)
 
 # Chiral_Deff(v0, Dr, w0=1) = (Dr / (Dr^2 + w0^2)) * (v0^2) / 2
-Chiral_Deff(v0, Dr, w0=1) = (Dr / (4*Dr^2 + w0^2)) * (v0^2) * (2/3)
-Chiral_Deff3D(v0, Dr, w0=1) = (1/6)*(v0^2/Dr)*((Dr^2 + w0^2 /12 )/(Dr^2 + w0^2 /4))
-Chiral_Deff3D_lim(v0, Dr) = (1 / 6) * (v0^2 / Dr) ./ 3
+# Chiral_Deff(v0, Dr, w0=1) = (Dr / (4*Dr^2 + w0^2)) * (v0^2) * (2/3)
+# Chiral_Deff3D(v0, Dr, w0=1) = (1/6)*(v0^2/Dr)*((Dr^2 + w0^2 /12 )/(Dr^2 + w0^2 /4))
+# Chiral_Deff3D_lim(v0, Dr) = (1 / 6) * (v0^2 / Dr) ./ 3
 Dr_list = [0.1, 0.05, 0.01, 0.005, 0.001]
 # @show v0_list
 # v0_list = [1,2]
@@ -527,11 +527,11 @@ D_sim, ps, t = Deff_sim(Dr_list)
 # v_range = LinRange(v0_list[1], v0_list[end], 50)
 Dr_range = LinRange(Dr_list[1], 0.0005, 50)
 # Dr_range = LinRange(0.5, 0.0005, 50)
-D_ex = Chiral_Deff3D.(1, Dr_range)
-D_lim = Chiral_Deff3D_lim.(1, Dr_range)
+# D_ex = Chiral_Deff3D.(1, Dr_range)
+# D_lim = Chiral_Deff3D_lim.(1, Dr_range)
 # D_ex = Chiral_Deff.(v_range, 1, 3)
-plot(Dr_range, D_ex, label="fixed z-axis")
-plot!(Dr_range, D_lim, label="ω/Dr >> 1")
+# plot(Dr_range, D_ex, label="fixed z-axis")
+# plot!(Dr_range, D_lim, label="ω/Dr >> 1")
 scatter!(Dr_list , D_sim ./ 6, label="simulatiom")
 plot!(xlabel="D_r", ylabel="Deff", legend=:topright)
 

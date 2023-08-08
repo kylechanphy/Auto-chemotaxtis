@@ -123,4 +123,4 @@ plot!(fig, xlabel=L"z", ylabel=L"C",
         grid=false
         )
 
-savefig(fig, "paper/diffus_test/diff_test3D.svg")
+# savefig(fig, "paper/diffus_test/diff_test3D.svg")

@@ -1,3 +1,124 @@
+"""
+Define logger
+"""
+@with_kw mutable struct Logger
+    pos::Vector{SVector{2,Float64}} = [SA[0.0, 0.0]]
+    phi::Vector{Float64} = [0.0]
+    Fc::Vector{SVector{2,Float64}} = [SA[0.0, 0.0]]
+    field::Matrix{Float64} = zeros(2, 2)
+    flow::Vector{Vector{SVector{2,Float64}}} = [[SA[0.0, 0.0] for _ in 1:2]]
+end
+
+
+@with_kw mutable struct Logger3D
+    pos::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
+    v::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
+    vhead::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
+    dwhead::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
+    Fc::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
+    field::Array{Float64,3} = zeros(2, 2, 2)
+    flow::Array{SVector{3,Float64},3} = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
+end
+
+
+@with_kw mutable struct LoggerInteracting
+    all_pos::Vector{Vector{SVector{2,Float64}}} = Array{Vector{SVector{2,Float64}}}(undef, 2)
+    field::Matrix{Float64} = zeros(2, 2)
+end
+
+#* Initalse logger 
+function initLogger(part::Particle, sysPara)
+    logger = Logger()
+    @unpack pos, ϕ, v0, ω0, α, Dr = part
+    @unpack dt, Nstep = sysPara
+
+
+    chem_field = zeros(sysPara.nx, sysPara.ny)
+
+    all_pos = [pos for _ in 1:Nstep]
+    all_phi = [ϕ for _ in 1:Nstep]
+    all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
+    flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+
+    logger.pos = all_pos
+    logger.phi = all_phi
+    logger.Fc = all_F
+    logger.field = chem_field
+
+
+    flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    logger.flow = flow_field
+
+
+    return logger
+end
+
+
+#* Initalse logger 3D
+function initLogger(part::Particle3D, sysPara)
+    logger = Logger3D()
+    @unpack pos, ϕ, θ, v0, ω0, α, Dr = part
+    @unpack dt, Nstep, nx, ny, nz = sysPara
+
+    v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
+    chem_field = zeros(sysPara.nx, sysPara.ny, sysPara.nz)
+
+    all_pos = [pos for _ in 1:Nstep]
+    all_vhead = [v_head for _ in 1:Nstep]
+    all_dwhead = [v_head for _ in 1:Nstep]
+    all_v = [v_head for _ in 1:Nstep]
+    all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
+
+    if sysPara.flow == false
+        flow_field = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
+    else
+        flow_field = Array{SVector{3,Float64},3}(undef, nx, ny, nz)
+    end
+
+
+    logger.pos = all_pos
+    logger.vhead = all_vhead
+    logger.dwhead = all_dwhead
+    logger.v = all_v
+    logger.Fc = all_F
+    logger.field = chem_field
+
+    #! ummodify flow 
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    logger.flow = flow_field
+
+
+    return logger
+end
+
+#* Initalse Logger interacting 2D
+function initLogger(partSet::Vector{Particle}, sysPara)
+    logger = LoggerInteracting()
+    @unpack v0, ω0, α, Dr = partSet[1]
+    @unpack dt, Nstep = sysPara
+    num = length(partSet)
+
+    chem_field = zeros(sysPara.nx, sysPara.ny)
+
+    all_pos = [[SA[0.0, 0.0] for _ in 1:Nstep] for i in 1:num]
+    # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    for i in eachindex(partSet)
+        all_pos[i][1] = partSet[i].pos
+    end
+
+    logger.all_pos = all_pos
+    # logger.Fc = all_F
+    logger.field = chem_field
+
+
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    # logger.flow = flow_field
+
+
+    return logger
+end
+
 
 function savedir(part, sysPara)
     if part.Dr != 0
@@ -103,13 +224,25 @@ function updataFileVersion(dir)
     # @show dir
 end
 
-function savedata!(field, all_pos, all_F, flow, part, sysPara)
+function savedata!(field, all_pos, all_phi, all_F, flow, part::Particle, sysPara)
     # if sysPara.flow
     #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
     # else
     #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
     # end
-    data = Dict("field" => field, "pos" => all_pos, "force" => all_F, "flow" => flow, "part" => part, "sysPara" => sysPara)
+    data = Dict("field" => field, "pos" => all_pos, "phi" => all_phi, "force" => all_F, "flow" => flow, "part" => part, "sysPara" => sysPara)
+    save((sysPara.dir * "/data.jld2"), data)
+
+    # return savedir
+end
+
+function savedata!(field, all_pos, all_vhead, all_dwhead, all_F, flow, part::Particle3D, sysPara)
+    # if sysPara.flow
+    #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/flow_D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+    # else
+    #     savedir = "raw/v$(part.v0)_w0$(part.ω0)/D$(part.D)_a$(part.α)_dx$(sysPara.dx)_nx$(sysPara.nx)_N$(sysPara.Nstep)"
+    # end
+    data = Dict("field" => field, "pos" => all_pos, "vhead" => all_vhead, "dwhead" => all_dwhead, "force" => all_F, "flow" => flow, "part" => part, "sysPara" => sysPara)
     save((sysPara.dir * "/data.jld2"), data)
 
     # return savedir
@@ -150,119 +283,21 @@ function dumpTxt(objs::Vector, dir)
 end
 
 
+"""
+Write a julia dictionary  to txt file with field name and value
+"""
+function dict2txt(dict, dir)
+    open(dir, "w") do io
+        for key in keys(dict)
+            write(io, "$key = $(dict[key])\n")
+        end
+    end
+end
 
 #=
 logging data
 =#
 
-#* Define logger
-@with_kw mutable struct Logger
-    pos::Vector{SVector{2,Float64}} = [SA[0.0, 0.0]]
-    Fc::Vector{SVector{2,Float64}} = [SA[0.0, 0.0]]
-    field::Matrix{Float64} = zeros(2, 2)
-    flow::Vector{Vector{SVector{2,Float64}}} = [[SA[0.0, 0.0] for _ in 1:2]]
-end
-
-
-@with_kw mutable struct Logger3D
-    pos::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
-    v::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
-    Fc::Vector{SVector{3,Float64}} = [SA[0.0, 0.0, 0.0]]
-    field::Array{Float64,3} = zeros(2, 2, 2)
-    flow::Array{SVector{3,Float64},3} = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
-end
-
-
-@with_kw mutable struct LoggerInteracting
-    all_pos::Vector{Vector{SVector{2,Float64}}} = Array{Vector{SVector{2, Float64}}}(undef, 2)
-    field::Matrix{Float64} = zeros(2, 2)
-end
-#* Initalse logger 
-function initLogger(part::Particle, sysPara)
-    logger = Logger()
-    @unpack pos, ϕ, v0, ω0, α, Dr = part
-    @unpack dt, Nstep = sysPara
-
-
-    chem_field = zeros(sysPara.nx, sysPara.ny)
-
-    all_pos = [pos for _ in 1:Nstep]
-    all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
-    flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
-
-    logger.pos = all_pos
-    logger.Fc = all_F
-    logger.field = chem_field
-
-
-    flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
-    logger.flow = flow_field
-
-
-    return logger
-end
-
-
-#* Initalse logger 3D
-function initLogger(part::Particle3D, sysPara)
-    logger = Logger3D()
-    @unpack pos, ϕ, θ, v0, ω0, α, Dr = part
-    @unpack dt, Nstep, nx, ny, nz = sysPara
-
-    v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
-    chem_field = zeros(sysPara.nx, sysPara.ny, sysPara.nz)
-
-    all_pos = [pos for _ in 1:Nstep]
-    all_v = [v_head for _ in 1:Nstep]
-    all_F = [SA[0.0, 0.0, 0.0] for _ in 1:Nstep] #* Chemical force
-
-    if sysPara.flow == false
-        flow_field = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
-    else
-        flow_field = Array{SVector{3,Float64},3}(undef, nx, ny, nz)
-    end
-
-
-    logger.pos = all_pos
-    logger.v = all_v
-    logger.Fc = all_F
-    logger.field = chem_field
-
-    #! ummodify flow 
-    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
-    logger.flow = flow_field
-
-
-    return logger
-end
-
-#* Initalse Logger interacting 2D
-function initLogger(partSet::Vector{Particle}, sysPara)
-    logger = LoggerInteracting()
-    @unpack v0, ω0, α, Dr = partSet[1]
-    @unpack dt, Nstep = sysPara
-    num = length(partSet)
-
-    chem_field = zeros(sysPara.nx, sysPara.ny)
-
-    all_pos = [[SA[0.0, 0.0] for _ in 1:Nstep] for i in 1:num]
-    # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
-    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
-    for i in eachindex(partSet)
-        all_pos[i][1] = partSet[i].pos
-    end
-
-    logger.all_pos = all_pos
-    # logger.Fc = all_F
-    logger.field = chem_field
-
-
-    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
-    # logger.flow = flow_field
-
-
-    return logger
-end
 
 function dumping(logger, s, part, sysPara, logset)
     if logset.dump_flow == true

@@ -116,7 +116,7 @@ function viz(pos::Vector{SVector{3, Float64}}, sysPara; savetxt=true)
 
     if savetxt == true
         dir = sysPara.dir
-        writedlm(dir * "/traj.txt", [t[1:skip:end] x[1:skip:end] y[1:skip:end] z[1:skip:end]])
+        writedlm(dir * "/traj.txt", [t[1:end] x[1:end] y[1:end] z[1:end]])
     end
     # scatter!([x[1]], [y[1]], [z[1]])
     return fig
