@@ -138,12 +138,36 @@ function viz_clip(pos::Vector{SVector{3,Float64}}, sysPara, clip=[10_000, 50_000
         # xlabel="x", ylabel="y", zlabel="z",
         aspect_ratio=:equal,
         line_z=t[1:skip:end],
-        color=:viridis,
+        # color=:viridis,
+        color=:winter,
         grid=0, axis=false, ticks=false)
     # plot!(aspect_ratio=:equal)
     set_equla_aspect!(fig)
     # scatter!([x[1]], [y[1]], [z[1]])
 end
+
+function viz_clip(pos::Vector{SVector{2,Float64}}, sysPara, clip=[1, length(pos)])
+    dt = sysPara.dt
+    skip = 100
+    x = [v[1] for v in pos][clip[1]:clip[2]]
+    y = [v[2] for v in pos][clip[1]:clip[2]]
+    # z = [v[3] for v in pos][clip[1]:clip[2]]
+    N = length(x)
+    t = 0:dt:dt*(N-1)
+
+
+    fig = plot(x[1:skip:end], y[1:skip:end], label="",
+        # xlabel="x", ylabel="y", zlabel="z",
+        aspect_ratio=:equal,
+        line_z=t[1:skip:end],
+        # color=:viridis,
+        color=:winter,
+        grid=0, axis=false, ticks=false)
+    # plot!(aspect_ratio=:equal)
+    set_equla_aspect!(fig)
+    # scatter!([x[1]], [y[1]], [z[1]])
+end
+
 
 
 
@@ -215,13 +239,14 @@ end
 function viz_color(pos::Vector ;marker=false, cbar=false)
     x = [v[1] for v in pos]
     y = [v[2] for v in pos]
-
-    fig = plot(x, y, label="",
+    skip = 100
+    fig = plot(x[1:skip:end], y[1:skip:end], label="",
         aspect_ratio=1,
-        linez=range(0.0, stop=1.0, length=length(y)),
-        linewidth=5,
-        c=:lightrainbow,
+        linez=t[1:skip:end],
+        linewidth=1,
+        c=:winter,
         legend=false,
+        grid=0,
         colorbar=cbar)
 
     if marker == true

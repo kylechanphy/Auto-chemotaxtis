@@ -116,11 +116,12 @@ fig = plot(z, result, label="Theary", framestyle=:box)
 # plot!(fig, y, sim, label="Simulation")
 scatter!(fig, z[1:2:end], sim[1:2:end], markershape=:circle, c=2, label="Simulation")
 plot!(fig, xlabel=L"z", ylabel=L"C",
-        legendfontsize=12,
-        guidefontsize=18,
-        tickfontsize=16,
+        # legendfontsize=12,
+        # guidefontsize=18,
+        # tickfontsize=16,
         fg_legend=:transparent,
         grid=false
         )
 
+fig3D = fig
 # savefig(fig, "paper/diffus_test/diff_test3D.svg")

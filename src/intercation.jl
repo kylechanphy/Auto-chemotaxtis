@@ -94,8 +94,8 @@ function kernal3D(r, r_prime, t, t_prime, D, dim)
     dr = norm(r - r_prime)
     return exp(-(dr)^2 / (4 * D * (t - t_prime))) / (4π * D * (t - t_prime))^(d/2)
 end
-function getChemForceGreen(sysPara, part, logger)
-end
+
+
 
 function getChemForce_periodic(field, sysPara, part)
     @unpack pos, R, = part
@@ -266,14 +266,9 @@ function getChemForce2(field, sysPara, part::Particle3D, surface_vec)
     #* interpolation
     sitp = scale(interpolate(refpoint, BSpline(Quadratic(InPlace(OnCell())))), xlist, ylist, zlist)
 
-    #* find the gradient across a finte size particle
-    # θ = LinRange(0, π, 10)
-    # ϕ = LinRange(0, π, 30)
-    # dϕ = ϕ[2] - ϕ[1]
-    # dθ = θ[2] - θ[1]
 
-    for i in 1:length(θ)
-        for j in 1:length(ϕ)
+    for j in eachindex(ϕ)
+        for i in eachindex(θ)
             # unit_vec[i, j] = SA[sin(θ[i])cos(ϕ[j]), sin(θ[i])sin(ϕ[j]), cos(θ[i])]
             n = unit_vec[i, j]
             pt1 = n .* R
@@ -411,7 +406,7 @@ function genBoundVec2(part::Particle)
     dϕ = ϕ[2] - ϕ[1]
     unit_vec = Array{SVector{2,Float64},1}(undef, length(ϕ))
 
-    for j in 1:length(ϕ)
+    for j in eachindex(ϕ)
         unit_vec[j] = SA[cos(ϕ[j]), sin(ϕ[j])]
     end
 
@@ -420,15 +415,16 @@ function genBoundVec2(part::Particle)
 end
 
 function genBoundVec2(part::Particle3D)
-    θ = LinRange(0, π, 10)
-    ϕ = LinRange(0, 2π - (2π/30), 30)
+    θ = LinRange(0, π, 20)
+    ϕ = LinRange(0, 2π - (2π/38), 38)
     dϕ = ϕ[2] - ϕ[1]
     dθ = θ[2] - θ[1]
 
     # vecs = [[SA[0.0, 0.0, 0.0,] for i in 1:npoly] for j in 1:7]
     unit_vec = Array{SVector{3,Float64},2}(undef, length(θ), length(ϕ))
-    for i in 1:length(θ)
-        for j in 1:length(ϕ)
+    
+    for j in eachindex(ϕ)
+        for i in eachindex(θ)
             unit_vec[i, j] = SA[sin(θ[i])cos(ϕ[j]), sin(θ[i])sin(ϕ[j]), cos(θ[i])]
         end
     end

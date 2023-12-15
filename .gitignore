@@ -4,6 +4,7 @@
 
 LocalPreferences.toml
 single_droplet.jl
+Manifest.toml
 ################################################################################
 #                          DrWatson Project Structure                          #
 ################################################################################
@@ -19,6 +20,9 @@ raw5
 raw6
 raw7
 raw8
+3D
+linear
+manuscript
 test
 videos
 plots
@@ -35,6 +39,9 @@ script
 *.svg
 *.txt
 *.pdf
+*.png
+*.vtu
+*.vti
 
 
 ################################################################################

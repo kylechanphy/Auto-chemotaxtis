@@ -1,3 +1,7 @@
+using Pkg
+Pkg.activate(".")
+
+using LoopVectorization
 using Parameters
 using Plots
 using BenchmarkTools
@@ -28,9 +32,19 @@ include("visualize.jl")
 
 ξ(dt, Dr) = sqrt(2 * Dr * dt) * randn()
 
+"""
+Run simulation for a single particle in 2D
+
+# Arguments
+- 'sysPara': a struct of systerm parameters
+- 'Part:Particle': a struct of single 2D particle
+- 'logset': a struct of logger setting 
+
+"""
 function Simulation(sysPara, part::Particle, logset)
     @unpack pos, ϕ, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
+
 
     logger = initLogger(part, sysPara)
 
@@ -102,7 +116,15 @@ function Simulation(sysPara, part::Particle, logset)
 end
 
 
+"""
+Run simulation for a single particle in 3D
 
+# Arguments
+- 'sysPara': a struct of systerm parameters
+- 'Part:Particle': a struct of single 3D particle
+- 'logset': a struct of logger setting 
+
+"""
 function Simulation(sysPara, part::Particle3D, logset)
     @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
@@ -122,8 +144,10 @@ function Simulation(sysPara, part::Particle3D, logset)
         inputs = [sysPara, part]
         dumpTxt(inputs, sysPara.dir)
     end
+
     ω_head = SA[cos(ϕ_ω)sin(θ_ω), sin(ϕ_ω)sin(θ_ω), cos(θ_ω)]
     v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
+
     chem_field = logger.field
     dchem_field = copy(chem_field)
     # chem_field = zeros(sysPara.nx, sysPara.ny)
@@ -197,7 +221,7 @@ function Simulation(sysPara, part::Particle3D, logset)
         part.v = v_head
 
 
-        chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+        # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
 
 
         logger.pos[j] = copy(part.pos)
@@ -253,7 +277,7 @@ function Simulation(sysPara, part::Particle3D, logset)
             part.v = v_head
 
 
-            chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+            # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
 
 
             logger.pos[j] = copy(part.pos)
@@ -280,6 +304,15 @@ function Simulation(sysPara, part::Particle3D, logset)
 end
 
 
+"""
+Run simulation for a multiple particles in 2D
+
+# Arguments
+- 'sysPara': a struct of systerm parameters
+- 'Part:Particle': a 1D vector of single 2D particle struct
+- 'logset': a struct of logger setting 
+
+"""
 function Simulation(sysPara, partSet::Vector{Particle}, logset)
     @unpack v0, ω0, α, Dr = partSet[1]
     @unpack dt, Nstep, ny, nx = sysPara
@@ -367,9 +400,129 @@ function Simulation(sysPara, partSet::Vector{Particle}, logset)
 end
 
 
-function randVec()
-    v = randn(3)
-    # return @fastmath v ./ norm(v)
-    return v
-end 
+
+function Simulation(sysPara, part::Particle3D, logset, old_data)
+    @unpack dt, Nstep = sysPara
+
+    @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
+
+    logger = initLogger(sysPara, part::Particle3D, old_data)
+    part.pos = copy(logger.pos[1])
+
+    if logset.savedata == true
+        dir = savedir(part, sysPara, logset)
+        if ispath(dir)
+            nothing
+        else
+            mkpath(dir)
+        end
+        sysPara.dir = dir
+        @show sysPara.dir
+        inputs = [sysPara, part]
+        dumpTxt(inputs, sysPara.dir)
+    end
+
+    pos = copy(logger.pos[1])
+    ω_head = copy(logger.dwhead[1])
+    v_head = copy(logger.vhead[1])
+
+    chem_field = logger.field
+    dchem_field = copy(chem_field)
+
+    
+    dpos = copy(pos)
+    dω_head = copy(ω_head)
+    dv_head = copy(v_head)
+
+
+    flow_field = logger.flow
+    bound_vec = genBoundVec2(part) #* discretise surface of sphere
+    
+    if logset.dump_field || logset.dump_flow
+        dumping(logger, 1, part, sysPara, logset)
+    end
+
+    if ω0 != 0
+        T = 3 * 2π / ω0
+        NT = minimum([floor(Int64, T / dt), Nstep])
+    else
+        NT = 1000
+    end
+
+    prog = Progress(Nstep - 1, 5) #* progress bar
+    for j in 2:Nstep
+
+        #* calucalte chemotactic force
+        flowField!(flow_field, sysPara, part)
+        # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
+        diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
+        F = getChemForce2(dchem_field, sysPara, part, bound_vec)
+        chem_field, dchem_field = dchem_field, chem_field
+
+        # all_F[j] = copy(F .* α)
+        # F = SA[0.0, 0.0, 0.0]
+        vel = v_head * v0
+
+        part.vel = vel + α * F
+        dpos = part.pos + part.vel * dt
+
+
+        # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+        if sysPara.perturbation == true && j <= NT
+            ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, 1/500), ξ(dt, 1/500), ξ(dt, 1/500)]
+        else
+            ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        end
+
+        torque = RotationVec(ωx, ωy, ωz)
+        rot = torque
+
+        dv_head = rot * v_head
+        dω_head = rot * ω_head
+
+        dv_head = @fastmath dv_head ./ norm(dv_head)
+        dω_head = @fastmath dω_head ./ norm(dω_head)
+        
+        v_head, dv_head = dv_head, v_head
+        ω_head, dω_head = dω_head, ω_head
+
+        part.pos, dpos = dpos, part.pos
+
+        part.v = v_head
+
+        #* extand the simulation box
+        # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+
+
+        logger.pos[j] = copy(part.pos)
+        logger.vhead[j] = copy(v_head)
+        logger.dwhead[j] = copy(ω_head)
+        # logger.v[j] = copy(ω_head)
+        logger.Fc[j] = copy(F .* α)
+
+
+        if j % logset.every == 0
+            dumping(logger, j, part, sysPara, logset)
+        end
+
+        next!(prog) #* progress bar
+    end
+
+
+    if logset.savedata == true
+        savedata!(logger.field, logger.pos, logger.vhead, logger.dwhead, logger.Fc, logger.flow, part, sysPara)
+    end
+    # return chem_field, all_pos, all_F, flow_field, logger
+
+    return logger
+end
+    
+
+
+
+# function randVec()
+#     v = randn(3)
+#     # return @fastmath v ./ norm(v)
+#     return v
+# end 
 

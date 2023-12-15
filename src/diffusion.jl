@@ -4,7 +4,8 @@
 function diffusion!(u, du, flow, sysPara, part)
     constFlux!(u, sysPara, part) #* point sources with constant rate
     updataGridAdvection!(u, du, flow, sysPara, part)
-    DirichletBoundary!(du, sysPara)
+    # DirichletBoundary!(du, sysPara)
+    NeumannBoundary!(u, du, sysPara)
     # return u, du
 end
 
@@ -81,6 +82,7 @@ function constFlux!(u, sysPara, part::Particle3D)
     @unpack nx, ny, nz, dx, dy, dz, dt = sysPara
     @unpack pos, R, src = part
 
+    factor = dt * src
     _dx, _dy, _dz = 1/dx, 1/dy, 1/dz
     _dx3 = 1/dx^3
     x, y, z = pos #! physical positin
@@ -98,7 +100,7 @@ function constFlux!(u, sysPara, part::Particle3D)
     Threads.@threads for k in zlimlo:zlimup
         for j in ylimlo:ylimup
             for i in xlimlo:xlimup
-            @inbounds u[i, j, k] = u[i, j, k] + dt * src * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy) * ibm4c(abs(z - (k - 1) * dz) * _dz) * _dx3
+            @inbounds u[i, j, k] = u[i, j, k] + factor * ibm4c(abs(x - (i - 1) * dx) * _dx) * ibm4c(abs(y - (j - 1) * dy) * _dy) * ibm4c(abs(z - (k - 1) * dz) * _dz) * _dx3
             end
         end
     end
@@ -132,12 +134,13 @@ end
 function updataGrid!(u, du, sysPara, part)
     @unpack dx, dy, dt, nx, ny = sysPara
     @unpack  D = part
+    factor = dt * D
+    _dx2, _dy2 = 1/dx^2, 1/dy^2
     Threads.@threads for j in 2:ny-1
         for i in 2:nx-1
-
-            @inbounds du[i, j] = u[i, j] + dt * D * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) / dx^2
+            @inbounds du[i, j] = u[i, j] + factor * ((u[i+1, j] - 2 * u[i, j] + u[i-1, j]) * _dx2
                                            +
-                                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) / dy^2)
+                                           (u[i, j+1] - 2 * u[i, j] + u[i, j-1]) * _dy2)
         end
     end
 end
@@ -148,12 +151,13 @@ function updataGrid!(u, du, sysPara, part::Particle3D)
     @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
     @unpack pos, R, D = part
 
+    factor = dt*D
     _dx2, _dy2, _dz2 = 1/dx^2, 1/dy^2, 1/dz^2
     
     Threads.@threads for k in 2:nz-1
          for j in 2:ny-1
             for i in 2:nx-1
-                @inbounds du[i, j, k] = u[i, j, k] + dt * D * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2
+                @inbounds du[i, j, k] = u[i, j, k] + factor * ((u[i+1, j, k] - 2 * u[i, j, k] + u[i-1, j, k]) * _dx2
                                             +
                                             (u[i, j+1, k] - 2 * u[i, j, k] + u[i, j-1, k]) * _dy2
                                             +
@@ -303,13 +307,13 @@ function NeumannBoundary!(u, du, sysPara)
     @unpack nx, ny, = sysPara
 
     Threads.@threads for j in 1:ny
-        du[1, j] = u[2, j]
-        du[nx, j] = u[nx-1, j]
+        @inbounds du[1, j] = u[2, j]
+        @inbounds du[nx, j] = u[nx-1, j]
     end
 
     Threads.@threads for i in 1:nx
-        du[i, 1] = u[i,2]
-        du[i, ny] = u[i,ny-1]
+        @inbounds du[i, 1] = u[i, 2]
+        @inbounds du[i, ny] = u[i, ny-1]
     end
 end
 
@@ -355,30 +359,36 @@ end
 #     end
 # end
 
+
+"""
+    Neumann boundary condition (no flux) in 3d
+
+"""
 function NeumannBoundary!(u::Array{Float64,3}, du, sysPara)
     @unpack nx, ny, nz = sysPara
+    _3 = 1/3 
 
     #* X-Y plane
     Threads.@threads for j in 1:ny
         for i in 1:nx
-           @views du[i, j, 1] = (u[i, j, 3] - 4*u[i,j,2]) / 3
-           @views du[i, j, nz] = (-u[i, j, nz-2] + 4 * u[i, j, nz-1]) / 3
+           @views du[i, j, 1] = (u[i, j, 3] - 4*u[i,j,2]) *_3
+           @views du[i, j, nz] = (-u[i, j, nz-2] + 4 * u[i, j, nz-1]) *_3
         end
     end
     
     #* Y-Z plane
     Threads.@threads for k in 1:nz
         for j in 1:ny
-           @views du[1, j, k] = (u[3, j, k] - 4*u[2,j,k])/3
-           @views du[nx, j, k] = (-u[nx-2, j, k] + 4*u[nx-1, j, k])/3
+            @views du[1, j, k] = (u[3, j, k] - 4 * u[2, j, k]) * _3
+           @views du[nx, j, k] = (-u[nx-2, j, k] + 4*u[nx-1, j, k]) * _3
         end
     end
 
     #* X-Z plane
     Threads.@threads for k in 1:nz
         for i in 1:nx
-           @views du[i, 1, k] = (u[i, 3, k] - 4*u[i,2,k])/3
-           @views du[i, ny, k] = (-u[i, ny-2, k] + 4*u[i, ny-1, k])/3
+           @views du[i, 1, k] = (u[i, 3, k] - 4*u[i,2,k]) * _3
+           @views du[i, ny, k] = (-u[i, ny-2, k] + 4*u[i, ny-1, k]) * _3
         end
     end
 end

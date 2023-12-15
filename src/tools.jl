@@ -91,6 +91,57 @@ function initLogger(part::Particle3D, sysPara)
     return logger
 end
 
+
+"""
+    Initalse logger for 3D simulation to follow a prior result
+
+"""
+function initLogger(sysPara, part::Particle3D, old_data)
+    logger = Logger3D()
+    
+    # if new_sysPara.nx != old_sysPara.nx || new_sysPara.ny != old_sysPara.ny || new_sysPara.nz != old_sysPara.nz
+    #     println("Error: The dimensions of the new and old simulation boxes do not match.")
+    # end
+
+    @unpack dt, Nstep, nx, ny, nz = sysPara
+
+    pos = copy(old_data["pos"][end])
+    v_head = copy(old_data["vhead"][end])
+    w_head = copy(old_data["dwhead"][end])
+    chem_field = old_data["field"]
+
+    F = copy(old_data["force"][end])
+
+    all_pos = [pos for _ in 1:Nstep]
+    all_vhead = [v_head for _ in 1:Nstep]
+    all_dwhead = [w_head for _ in 1:Nstep]
+
+    all_v = [v_head for _ in 1:Nstep]
+    all_F = [F for _ in 1:Nstep] #* Chemical force
+
+    if sysPara.flow == false
+        flow_field = Array{SVector{3,Float64},3}(undef, 2, 2, 2)
+    else
+        flow_field = Array{SVector{3,Float64},3}(undef, nx, ny, nz)
+    end
+
+
+    logger.pos = all_pos
+    logger.vhead = all_vhead
+    logger.dwhead = all_dwhead
+    logger.v = all_v
+    logger.Fc = all_F
+    logger.field = chem_field
+
+    #! ummodify flow 
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    logger.flow = flow_field
+
+
+    return logger
+end
+
+
 #* Initalse Logger interacting 2D
 function initLogger(partSet::Vector{Particle}, sysPara)
     logger = LoggerInteracting()
@@ -200,6 +251,8 @@ function savedir(partSet::Vector{Particle}, sysPara)
 end
 
 
+
+
 function updataFileVersion(dir)
     if ispath(dir)
         # println("isdir")
@@ -281,6 +334,8 @@ function dumpTxt(objs::Vector, dir)
         end
     end
 end
+
+
 
 
 """
@@ -422,6 +477,50 @@ function SphericalToCartesian(v)
 
     return r * SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
 end
+
+
+
+"""
+Translate a vector from Cartesian to Spherical coordinate
+
+input: vec = [x, y, z]
+
+return a Static Array SA[r, theta, phi]
+  - r: length of the vector
+  - theta: polar angle [0, pi] from the z-axis to the vector 
+  - phi: azimuthal angle [0, 2pi] from the x-axis to the projection of the vector in x-y plane.
+"""
+function cart2sph(vec)
+    r = hypot(vec[1], vec[2], vec[3])
+    theta = acos(vec[3] / r)
+    phi = sign(vec[2])acos(vec[1] / hypot(vec[1], vec[2]))
+
+    if vec[1] == 0 && vec[2] == 0 
+        vec[3] != 0 || error("Undefind azimuthal angle ϕ for x=y=z=0")
+        phi = 0
+    end
+
+    return SA[r, theta, phi]
+end
+
+"""
+Translate a vector from Spherical to Cartesian coordinate
+
+input: vec = [r, theta, phi]
+
+return a Static Array SA[x, y, z]
+"""
+function sph2cart(vec)
+    r, theta, phi = vec
+
+    x = r*sin(theta)*cos(phi)
+    y = r*sin(theta)*sin(phi)
+    z = r*cos(theta)
+
+    return SA[x, y, z]
+end
+
+
 
 """
 Expanding simulatiom box
