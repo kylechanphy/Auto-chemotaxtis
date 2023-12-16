@@ -530,7 +530,7 @@ function expandBox(u, du, dims, sysPara, part::Particle3D, logger)
     println("Simulation box expanded in dims=$dims")
 
     x, y, z = part.pos
-    expand = 100
+    expand = 120
     if dims == 1
         new_u = zeros(nx + expand, ny, nz)
         new_du = similar(new_u)
@@ -620,6 +620,8 @@ function checkbound(u, du, sysPara, part::Particle3D, logger)
         println("out of bound")
         dims = -3
     end
+    
+    # println("checkbound: dims=$(dims)")
 
     if dims != 0
         u, du = expandBox(u, du, dims, sysPara, part, logger)

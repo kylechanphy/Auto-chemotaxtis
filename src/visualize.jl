@@ -187,6 +187,7 @@ function vizXY(pos::Vector{SVector{3,Float64}}, sysPara)
         color=:viridis)
 end
 
+
 function vizXZ(pos::Vector{SVector{3,Float64}}, sysPara)
     x = [v[1] for v in pos]
     z = [v[3] for v in pos]

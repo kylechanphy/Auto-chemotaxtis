@@ -180,7 +180,7 @@ function Simulation(sysPara, part::Particle3D, logset)
     end
 
     prog = Progress(Nstep - 1, 5) #* progress bar
-    for j in 2:NT
+    for j in 2 : Nstep
 
         #* calucalte chemotactic force
         flowField!(flow_field, sysPara, part)
@@ -198,13 +198,10 @@ function Simulation(sysPara, part::Particle3D, logset)
 
 
         # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
-        if sysPara.perturbation == true
-            ωx, ωy, ωz = ω0*dt * ω_head .+  SA[ξ(dt, 1/500), ξ(dt, 1/500), ξ(dt, 1/500)]
-        else
-            ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
-        end
 
+        ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
         torque = RotationVec(ωx, ωy, ωz)
+
         rot = torque
 
         dv_head = rot * v_head
@@ -212,7 +209,7 @@ function Simulation(sysPara, part::Particle3D, logset)
 
         dv_head = @fastmath dv_head ./ norm(dv_head)
         dω_head = @fastmath dω_head ./ norm(dω_head)
-        
+
         v_head, dv_head = dv_head, v_head
         ω_head, dω_head = dω_head, ω_head
 
@@ -221,7 +218,7 @@ function Simulation(sysPara, part::Particle3D, logset)
         part.v = v_head
 
 
-        # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+        chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
 
 
         logger.pos[j] = copy(part.pos)
@@ -238,63 +235,6 @@ function Simulation(sysPara, part::Particle3D, logset)
         next!(prog) #* progress bar
     end
 
-    if Nstep > NT
-        for j in NT+1 : Nstep
-
-            #* calucalte chemotactic force
-            flowField!(flow_field, sysPara, part)
-            # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
-            diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
-            F = getChemForce2(dchem_field, sysPara, part, bound_vec)
-            chem_field, dchem_field = dchem_field, chem_field
-
-            # all_F[j] = copy(F .* α)
-            # F = SA[0.0, 0.0, 0.0]
-            vel = v_head * v0
-
-            part.vel = vel + α * F
-            dpos = part.pos + part.vel * dt
-
-
-            # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
-
-            ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
-            torque = RotationVec(ωx, ωy, ωz)
-
-            rot = torque
-
-            dv_head = rot * v_head
-            dω_head = rot * ω_head
-
-            dv_head = @fastmath dv_head ./ norm(dv_head)
-            dω_head = @fastmath dω_head ./ norm(dω_head)
-
-            v_head, dv_head = dv_head, v_head
-            ω_head, dω_head = dω_head, ω_head
-
-            part.pos, dpos = dpos, part.pos
-
-            part.v = v_head
-
-
-            # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
-
-
-            logger.pos[j] = copy(part.pos)
-            logger.vhead[j] = copy(v_head)
-            logger.dwhead[j] = copy(ω_head)
-            # logger.v[j] = copy(ω_head)
-            logger.Fc[j] = copy(F .* α)
-
-
-            if j % logset.every == 0
-                dumping(logger, j, part, sysPara, logset)
-            end
-
-            next!(prog) #* progress bar
-        end
-    end
-
 
     if logset.savedata == true
         savedata!(logger.field, logger.pos, logger.vhead, logger.dwhead, logger.Fc, logger.flow, part, sysPara)
@@ -305,6 +245,7 @@ end
 
 
 """
+#! developing! 
 Run simulation for a multiple particles in 2D
 
 # Arguments
@@ -358,7 +299,9 @@ function Simulation(sysPara, partSet::Vector{Particle}, logset)
             # all_F[i] += α * getChemForce_periodic(dchem_field, sysPara, partSet[i])
             # sinPlaneWave2D!(static_field, sysPara, t)
             # all_F[i] += α * getChemForce_periodic_static(dchem_field, static_field, sysPara, partSet[i])
-            all_F[i] += α * getChemForce(dchem_field,sysPara, partSet[i])
+            bound_vec = genBoundVec2(partSet[i])
+            all_F[i] += α * getChemForce2(dchem_field, sysPara, partSet[i], bound_vec)
+            # all_F[i] += α * getChemForce2(dchem_field,sysPara, partSet[i])
             
             all_F[i] += getBoundForce(all_pos[i],  sysPara, partSet[i], i)
             # all_F[i] += WCA_force(all_pos, sysPara, partSet[i], i)
@@ -437,7 +380,7 @@ function Simulation(sysPara, part::Particle3D, logset, old_data)
 
     flow_field = logger.flow
     bound_vec = genBoundVec2(part) #* discretise surface of sphere
-    
+
     if logset.dump_field || logset.dump_flow
         dumping(logger, 1, part, sysPara, logset)
     end

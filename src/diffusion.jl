@@ -109,10 +109,12 @@ function constFlux!(u, sysPara, part::Particle3D)
 end
 
 
-#=
-* ibm 4-point cubic kernal
-! r in distant between grid and particle
-=#
+"""
+    ibm 4-point cubic kernal
+    #! r in distant between grid and particle
+
+    return a scaler value ϕ of approximatd δ source in one spatial component
+"""
 function ibm4c(r)
     ϕ = 0
     if r < 1
