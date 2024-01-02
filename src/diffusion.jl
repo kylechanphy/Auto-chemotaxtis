@@ -4,8 +4,8 @@
 function diffusion!(u, du, flow, sysPara, part)
     constFlux!(u, sysPara, part) #* point sources with constant rate
     updataGridAdvection!(u, du, flow, sysPara, part)
-    # DirichletBoundary!(du, sysPara)
-    NeumannBoundary!(u, du, sysPara)
+    DirichletBoundary!(du, sysPara)
+    # NeumannBoundary!(u, du, sysPara)
     # return u, du
 end
 
