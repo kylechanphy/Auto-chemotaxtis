@@ -10,6 +10,148 @@ function kernal3D(r, r_prime, t, t_prime, D, dim)
 end
 
 
+"""
+Kernal of gradient green function
+
+return a static array SA[Fx, Fy] for 2D and SA[Fx, Fy, Fz] for 3D
+
+# Arguments
+- 'r': target position
+- 'r_prime: postion of droplet at in t_prime 
+- 't': current time
+- 't_prime': past of time
+"""
+function gradient_kernal2D(r, r_prime, t, t_prime, D)
+    dr = norm(r - r_prime)
+    dt = t - t_prime
+    return -exp(-(dr)^2 / (4*D*dt)) * (2/(π*(4D*dt)^2)) * (r - r_prime)
+end
+
+function gradient_kernal3D(r, r_prime, t, t_prime, D)
+    dr = norm(r - r_prime)
+    dt = t - t_prime
+    return -exp(-(dr)^2 / (4 * D * dt)) * (2 / (π^(3/2) * (4D * dt)^(5/2))) * (r - r_prime)
+end
+
+
+function getChemForceGreen(kernal, sysPara, part::Particle, logger, surface_vec, Step, force_cache)
+    @unpack pos, R, D = part
+    @unpack dx, dy, nx, ny, npoly, dt = sysPara
+    path = logger.pos
+    t = dt*Step
+    
+    for i in eachindex(force_cache)
+        force_cache[i] = SA[0.0, 0.0]
+    end 
+    unit_vec, ϕ, dϕ = surface_vec
+    #* find the gradient across a finte size particle
+    Threads.@threads for j in eachindex(force_cache)
+        # id = Threads.threadid()
+        n = unit_vec[j]
+        r = n .* R + pos 
+        ∇C = force_cache[j]
+        for i in 1:Step-1
+            ∇C += kernal(r, path[i], t, i * dt, D)*dt
+        end
+        ∇C = ∇C .- dot(∇C, n) .* n
+        force_cache[j] = ∇C * R * dϕ
+        # @show force_cache[j]
+    end
+
+
+    return sum(force_cache) / (2π * R)
+end
+
+function getChemForceGreen2(kernal, sysPara, part::Particle, logger, surface_vec, Step, force_cache)
+    @unpack pos, R, D = part
+    @unpack dx, dy, nx, ny, npoly, dt = sysPara
+    path = logger.pos
+    t = dt * Step
+
+    t_cut = 5000
+    ∇C_h = SA[0., 0.] 
+    for i in eachindex(force_cache)
+        force_cache[i] = SA[0.0, 0.0]
+    end
+    unit_vec, ϕ, dϕ = surface_vec
+    if Step > t_cut
+        r = pos
+        for i in 1:Step-t_cut
+            ∇C_h += kernal(r, path[i], t, i * dt, D) * dt
+        end
+        for j in eachindex(force_cache)
+            n = unit_vec[j]
+            r = n .* R + pos
+            ∇C = force_cache[j]
+            for i in t_cut:Step-1
+                ∇C += kernal(r, path[i], t, i * dt, D) * dt
+            end
+            ∇C += ∇C_h
+            ∇C = ∇C .- dot(∇C, n) .* n
+            force_cache[j] = ∇C * R * dϕ
+        end
+    else
+        #* find the gradient across a finte size particle
+        Threads.@threads for j in eachindex(force_cache)
+            # id = Threads.threadid()
+            n = unit_vec[j]
+            r = n .* R + pos
+            ∇C = force_cache[j]
+            for i in 1:Step-1
+                ∇C += kernal(r, path[i], t, i * dt, D) * dt
+            end
+            ∇C = ∇C .- dot(∇C, n) .* n
+            force_cache[j] = ∇C * R * dϕ
+            # @show force_cache[j]
+        end
+    end
+
+    return sum(force_cache) / (2π * R)
+end
+
+function test_green(pos, path, Step, dt, D, kernal, unit_vec, force_cache)
+    r = pos
+    t = dt*Step
+    ∇C_h = SA[0., 0.]
+    # for i in 1:Step-1
+    @tturbo warn_check_args = false for i in 1:Step-1
+        ∇C_h += kernal(r, path[i], t, i * dt, D) * dt
+    end
+
+    return ∇C_h
+end
+
+
+
+function getChemForceGreen(kernal, sysPara, part::Particle3D, logger, surface_vec, Step, force_cache)
+    @unpack pos, R, D = part
+    @unpack dx, dy, dz, dt,  nx, ny, nz = sysPara
+    path = logger.pos
+    t = dt * Step
+
+    unit_vec, θ, ϕ, dθ, dϕ = surface_vec
+
+    @Threads.threads for j in eachindex(ϕ)
+        for i in eachindex(θ)
+            ∇C = force_cache[i,j]
+            ∇C = SA[0., 0., 0.]
+            n = unit_vec[i, j]
+            r = n .* R + pos
+
+            for i in 1:Step-1
+                ∇C += kernal(r, path[i], t, i * dt, D) * dt
+            end
+
+            ∇C = ∇C .- dot(∇C, n) .* n
+            force_cache[i, j] = ∇C * R^2 * sin(θ[i])dθ * dϕ
+        end
+    end
+
+
+    return sum(force_cache) / (4π * R^2)
+end
+
+
 function getChemForce_periodic(field, sysPara, part)
     @unpack pos, R, = part
     @unpack dx, dy, nx, ny, npoly = sysPara
@@ -118,7 +260,7 @@ function getChemForce2(field, sysPara, part, surface_vec)
     #* values for interpolation 
     refpoint = [field[i, j] for i in xlimlo:xlimup, j in ylimlo:ylimup]
 
-    #* change physical position to grid point
+    #* change the grid to physical position
     xlist = round((xlimlo - 1) * dx, digits=3):dx:round((xlimup - 1) * dx, digits=3)
     ylist = round((ylimlo - 1) * dy, digits=3):dy:round((ylimup - 1) * dy, digits=3)
 
