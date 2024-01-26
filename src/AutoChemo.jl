@@ -330,6 +330,127 @@ function Simulation(sysPara, part::Particle3D, logset)
 end
 
 
+#! Benchmark only!!!!
+function Simulation(sysPara, part::Particle3D, logset, Noise)
+    @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
+    @unpack dt, Nstep = sysPara
+
+    logger = initLogger(part::Particle3D, sysPara)
+
+
+    if logset.savedata == true
+        dir = savedir(part, sysPara, logset)
+        if ispath(dir)
+            nothing
+        else
+            mkpath(dir)
+        end
+        sysPara.dir = dir
+        @show sysPara.dir
+        inputs = [sysPara, part]
+        dumpTxt(inputs, sysPara.dir)
+    end
+
+    ω_head = SA[cos(ϕ_ω)sin(θ_ω), sin(ϕ_ω)sin(θ_ω), cos(θ_ω)]
+    v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
+
+    chem_field = logger.field
+    dchem_field = copy(chem_field)
+    # chem_field = zeros(sysPara.nx, sysPara.ny)
+    # dchem_field = copy(chem_field)
+
+
+    dpos = copy(pos)
+    dω_head = copy(ω_head)
+    dv_head = copy(v_head)
+
+    logger.pos[1] = copy(pos)
+    logger.v[1] = copy(v_head)
+    # logger.v[1] = copy(ω_head)
+    logger.Fc[1] = copy(SA[0.0, 0.0, 0.0])
+
+    # all_pos = [pos for _ in 1:Nstep]
+    # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    flow_field = logger.flow
+    bound_vec = genBoundVec2(part)
+    if logset.dump_field || logset.dump_flow
+        dumping(logger, 1, part, sysPara, logset)
+    end
+
+    if ω0 != 0
+        T = 3 * 2π / ω0
+        NT = minimum([floor(Int64, T / dt), Nstep])
+    else
+        NT = 1000
+    end
+
+    prog = Progress(Nstep - 1, 5) #* progress bar
+    for j in 2:Nstep
+
+        #* calucalte chemotactic force
+        flowField!(flow_field, sysPara, part)
+        # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
+        diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
+        F = getChemForce2(dchem_field, sysPara, part, bound_vec)
+        chem_field, dchem_field = dchem_field, chem_field
+
+        # all_F[j] = copy(F .* α)
+        # F = SA[0.0, 0.0, 0.0]
+        vel = v_head * v0
+
+        part.vel = vel + α * F
+        dpos = part.pos + part.vel * dt
+
+
+        # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+
+        # ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        ωx, ωy, ωz = ω0 * dt * ω_head .+ Noise[j]
+        torque = RotationVec(ωx, ωy, ωz)
+
+        rot = torque
+
+        dv_head = rot * v_head
+        dω_head = rot * ω_head
+
+        dv_head = @fastmath dv_head ./ norm(dv_head)
+        dω_head = @fastmath dω_head ./ norm(dω_head)
+
+        v_head, dv_head = dv_head, v_head
+        ω_head, dω_head = dω_head, ω_head
+
+        part.pos, dpos = dpos, part.pos
+
+        part.v = v_head
+
+
+        # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+
+
+        logger.pos[j] = copy(part.pos)
+        logger.vhead[j] = copy(v_head)
+        logger.dwhead[j] = copy(ω_head)
+        # logger.v[j] = copy(ω_head)
+        logger.Fc[j] = copy(F .* α)
+
+
+        if j % logset.every == 0
+            dumping(logger, j, part, sysPara, logset)
+        end
+
+        next!(prog) #* progress bar
+    end
+
+
+    if logset.savedata == true
+        savedata!(logger.field, logger.pos, logger.vhead, logger.dwhead, logger.Fc, logger.flow, part, sysPara)
+    end
+    # return chem_field, all_pos, all_F, flow_field, logger
+    return logger
+end
+
+
 """
 Run simulation for a single particle in 3D by green function
 
@@ -461,6 +582,131 @@ function Simulation_green(sysPara, part::Particle3D, logset)
     # return chem_field, all_pos, all_F, flow_field, logger
     return logger
 end
+
+#! Benchmark only!!!!
+function Simulation_green(sysPara, part::Particle3D, logset, Noise)
+    @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
+    @unpack dt, Nstep = sysPara
+
+    logger = initLogger(part::Particle3D, sysPara)
+
+
+    if logset.savedata == true
+        dir = savedir(part, sysPara, logset)
+        if ispath(dir)
+            nothing
+        else
+            mkpath(dir)
+        end
+        sysPara.dir = dir
+        @show sysPara.dir
+        inputs = [sysPara, part]
+        dumpTxt(inputs, sysPara.dir)
+    end
+
+    ω_head = SA[cos(ϕ_ω)sin(θ_ω), sin(ϕ_ω)sin(θ_ω), cos(θ_ω)]
+    v_head = SA[cos(ϕ)sin(θ), sin(ϕ)sin(θ), cos(θ)]
+
+    chem_field = logger.field
+    dchem_field = copy(chem_field)
+    # chem_field = zeros(sysPara.nx, sysPara.ny)
+    # dchem_field = copy(chem_field)
+
+
+    dpos = copy(pos)
+    dω_head = copy(ω_head)
+    dv_head = copy(v_head)
+
+    logger.pos[1] = copy(pos)
+    logger.v[1] = copy(v_head)
+    # logger.v[1] = copy(ω_head)
+    logger.Fc[1] = copy(SA[0.0, 0.0, 0.0])
+
+    # all_pos = [pos for _ in 1:Nstep]
+    # all_F = [SA[0.0, 0.0] for _ in 1:Nstep] #* Chemical force
+    # flow_field = [[SA[0.0, 0.0] for _ in 1:sysPara.nx] for _ in 1:sysPara.ny]
+    flow_field = logger.flow
+    bound_vec = genBoundVec2(part)
+
+    force_cache = copy(bound_vec[1])
+
+    if logset.dump_field || logset.dump_flow
+        dumping(logger, 1, part, sysPara, logset)
+    end
+
+    if ω0 != 0
+        T = 3 * 2π / ω0
+        NT = minimum([floor(Int64, T / dt), Nstep])
+    else
+        NT = 1000
+    end
+    Noise = [SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)] for _ in 1:Nstep]
+    prog = Progress(Nstep - 1, 5) #* progress bar
+    for j in 2:Nstep
+
+        #* calucalte chemotactic force
+        # flowField!(flow_field, sysPara, part)
+        # chem_field, dchem_field = diffusion!(chem_field, dchem_field, flow_field, sysPara, part, logger)
+        # diffusion!(chem_field, dchem_field, flow_field, sysPara, part)
+        # F = getChemForce2(dchem_field, sysPara, part, bound_vec)
+        F = getChemForceGreen(gradient_kernal3D, sysPara, part, logger, bound_vec, j, force_cache)
+        # chem_field, dchem_field = dchem_field, chem_field
+
+        # all_F[j] = copy(F .* α)
+        # F = SA[0.0, 0.0, 0.0]
+        vel = v_head * v0
+
+        part.vel = vel + α * F
+        dpos = part.pos + part.vel * dt
+
+
+        # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
+
+        # ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        ωx, ωy, ωz = ω0 * dt * ω_head .+ Noise[j]
+        torque = RotationVec(ωx, ωy, ωz)
+
+        rot = torque
+
+        dv_head = rot * v_head
+        dω_head = rot * ω_head
+
+        dv_head = @fastmath dv_head ./ norm(dv_head)
+        dω_head = @fastmath dω_head ./ norm(dω_head)
+
+        v_head, dv_head = dv_head, v_head
+        ω_head, dω_head = dω_head, ω_head
+
+        part.pos, dpos = dpos, part.pos
+
+        part.v = v_head
+
+
+        # chem_field, dchem_field = checkbound(chem_field, dchem_field, sysPara, part, logger)
+
+
+        logger.pos[j] = copy(part.pos)
+        logger.vhead[j] = copy(v_head)
+        logger.dwhead[j] = copy(ω_head)
+        # logger.v[j] = copy(ω_head)
+        logger.Fc[j] = copy(F .* α)
+
+
+        if j % logset.every == 0
+            dumping(logger, j, part, sysPara, logset)
+        end
+
+        next!(prog) #* progress bar
+    end
+
+
+    if logset.savedata == true
+        savedata!(logger.field, logger.pos, logger.vhead, logger.dwhead, logger.Fc, logger.flow, part, sysPara)
+    end
+    # return chem_field, all_pos, all_F, flow_field, logger
+    return logger
+end
+
 
 """
 #! developing! 
