@@ -263,7 +263,7 @@ function Simulation(sysPara, part::Particle3D, logset)
     else
         NT = 1000
     end
-
+    Noise = [SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)] for _ in 1:Nstep]
     prog = Progress(Nstep - 1, 5) #* progress bar
     for j in 2 : Nstep
 
@@ -284,7 +284,8 @@ function Simulation(sysPara, part::Particle3D, logset)
 
         # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
 
-        ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        # ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        ωx, ωy, ωz = ω0 * dt * ω_head .+ Noise[j]
         torque = RotationVec(ωx, ωy, ωz)
 
         rot = torque
@@ -394,7 +395,7 @@ function Simulation_green(sysPara, part::Particle3D, logset)
     else
         NT = 1000
     end
-
+    Noise = [SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)] for _ in 1:Nstep]
     prog = Progress(Nstep - 1, 5) #* progress bar
     for j in 2:Nstep
 
@@ -416,7 +417,8 @@ function Simulation_green(sysPara, part::Particle3D, logset)
 
         # noise = RotationVec(ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr))
 
-        ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        # ωx, ωy, ωz = ω0 * dt * ω_head .+ SA[ξ(dt, Dr), ξ(dt, Dr), ξ(dt, Dr)]
+        ωx, ωy, ωz = ω0 * dt * ω_head .+ Noise[j]
         torque = RotationVec(ωx, ωy, ωz)
 
         rot = torque
