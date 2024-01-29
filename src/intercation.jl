@@ -1,7 +1,4 @@
 
-"""
-Calculate the chemical force by green function 
-"""
 #* green function of diffusion equation
 function kernal3D(r, r_prime, t, t_prime, D, dim)
     d = dim
@@ -59,7 +56,7 @@ function getChemForceGreen(kernal, sysPara, part::Particle, logger, surface_vec,
     end
 
 
-    return sum(force_cache) / (2π * R)
+    return -sum(force_cache) / (2π * R)
 end
 
 function getChemForceGreen2(kernal, sysPara, part::Particle, logger, surface_vec, Step, force_cache)
@@ -106,19 +103,7 @@ function getChemForceGreen2(kernal, sysPara, part::Particle, logger, surface_vec
         end
     end
 
-    return sum(force_cache) / (2π * R)
-end
-
-function test_green(pos, path, Step, dt, D, kernal, unit_vec, force_cache)
-    r = pos
-    t = dt*Step
-    ∇C_h = SA[0., 0.]
-    # for i in 1:Step-1
-    @tturbo warn_check_args = false for i in 1:Step-1
-        ∇C_h += kernal(r, path[i], t, i * dt, D) * dt
-    end
-
-    return ∇C_h
+    return -sum(force_cache) / (2π * R)
 end
 
 
@@ -148,7 +133,7 @@ function getChemForceGreen(kernal, sysPara, part::Particle3D, logger, surface_ve
     end
 
 
-    return sum(force_cache) / (4π * R^2)
+    return -sum(force_cache) / (4π * R^2)
 end
 
 
@@ -189,7 +174,7 @@ function getChemForce_periodic(field, sysPara, part)
         force += F
     end
 
-    return force / len
+    return -force / len
 end
 
 function getChemForce_periodic_static(field, static_field, sysPara, part)
@@ -230,7 +215,7 @@ function getChemForce_periodic_static(field, static_field, sysPara, part)
         force += F
     end
 
-    return force / len
+    return -force / len
 end
 
 
@@ -278,7 +263,7 @@ function getChemForce2(field, sysPara, part, surface_vec)
     end
 
 
-    return force / (2π * R)
+    return -force / (2π * R)
 end
 
 
@@ -396,7 +381,7 @@ function getChemForce2(field, sysPara, part::Particle3D, surface_vec)
     end
 
 
-    return force / (4π*R^2)
+    return -force / (4π*R^2)
 end
 
 

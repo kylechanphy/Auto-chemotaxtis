@@ -582,7 +582,7 @@ function Simulation_green(sysPara, part::Particle3D, logset)
 end
 
 #! Benchmark only!!!!
-function Simulation_green(sysPara, part::Particle3D, logset, Noise)
+function Simulation_green(sysPara, part::Particle3D, logset, Noise::Vector{SVector{3,Float64}})
     @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
     @unpack dt, Nstep = sysPara
 
@@ -806,7 +806,7 @@ end
 
 
 
-function Simulation(sysPara, part::Particle3D, logset, old_data)
+function Simulation(sysPara, part::Particle3D, logset, old_data::Dict)
     @unpack dt, Nstep = sysPara
 
     @unpack pos, ϕ, θ, ϕ_ω, θ_ω, v0, ω0, α, Dr = part
