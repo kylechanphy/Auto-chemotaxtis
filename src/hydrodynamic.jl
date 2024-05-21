@@ -139,3 +139,12 @@ function rotlet(vel, ω, pos0, pos, part)
     return flow
 end
 
+function dipoleflow3D(r, r0, p, e)
+    r = r - r0
+    r_norm = norm(r)
+    r_hat = r ./ r_norm
+
+    u = p*(-1 + 3(dot(e, r_hat))^2)*r_hat
+    
+    return u ./ (8π*r_norm^2)
+end

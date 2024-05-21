@@ -15,7 +15,7 @@ function viz(u, all_p, sysPara, part)
     x = [v[1] for v in all_p]
     y = [v[2] for v in all_p]
     plot!(circle(part.R, part.pos[1], part.pos[2]), label="", c=:green, fill=1)
-    plot!(hm, x, y, label="", c=:white)
+    plot!(hm, x, y, label="", c=:white, clims=(0, 30))
     return hm
 end
 
@@ -181,7 +181,7 @@ function vizXY(pos::Vector{SVector{3,Float64}}, sysPara)
     skip = 100
 
     plot(x[1:skip:end], y[1:skip:end], label="",
-        xlabel="x", ylabel="y", left_margin=2mm,
+        xlabel="x", ylabel="y",
          aspect_ratio=:equal,
         line_z=t[1:skip:end],
         color=:viridis)
@@ -197,7 +197,7 @@ function vizXZ(pos::Vector{SVector{3,Float64}}, sysPara)
     skip = 100
     
     plot(x[1:skip:end], z[1:skip:end], label="",
-        xlabel="x", ylabel="z", left_margin=2mm,
+        xlabel="x", ylabel="z",
         aspect_ratio=:equal,
         line_z=t[1:skip:end],
         color=:viridis)
@@ -212,7 +212,7 @@ function vizYZ(pos::Vector{SVector{3,Float64}}, sysPara)
     skip = 100
 
     plot(y[1:skip:end], z[1:skip:end], label="",
-        xlabel="y", ylabel="z", left_margin=2mm,
+        xlabel="y", ylabel="z",
         aspect_ratio=:equal,
         line_z=t[1:skip:end],
         color=:viridis)

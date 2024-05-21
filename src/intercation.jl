@@ -136,6 +136,34 @@ function getChemForceGreen(kernal, sysPara, part::Particle3D, logger, surface_ve
     return -sum(force_cache) / (4π * R^2)
 end
 
+function getChemForceGreenWithHydro(kernal, sysPara, part::Particle3D, logger, surface_vec, Step, force_cache)
+    @unpack pos, R, D = part
+    @unpack dx, dy, dz, dt, nx, ny, nz = sysPara
+    path = logger.pos
+    t = dt * Step
+
+    unit_vec, θ, ϕ, dθ, dϕ = surface_vec
+
+    Threads.@threads for j in eachindex(ϕ)
+        for i in eachindex(θ)
+            ∇C = force_cache[i, j]
+            ∇C = SA[0.0, 0.0, 0.0]
+            n = unit_vec[i, j]
+            r = n .* R + pos
+
+            for i in 1:Step-1
+                ∇C += kernal(r, path[i], t, i * dt, D) * dt
+            end
+
+            ∇C = ∇C .- dot(∇C, n) .* n
+            force_cache[i, j] = ∇C * R^2 * sin(θ[i])dθ * dϕ
+        end
+    end
+
+
+    return -sum(force_cache) / (4π * R^2)
+end
+
 
 function getChemForce_periodic(field, sysPara, part)
     @unpack pos, R, = part
