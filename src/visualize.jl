@@ -111,8 +111,8 @@ function viz(pos::Vector{SVector{3, Float64}}, sysPara; savetxt=true)
         aspect_ratio=:equal,
         line_z=t[1:skip:end],
         color=:viridis)
-    # plot!(aspect_ratio=:equal)
-    set_equla_aspect!(fig)
+    plot!(fig, aspect_ratio=:equal)
+    # set_equla_aspect!(fig)
 
     if savetxt == true
         dir = sysPara.dir
@@ -141,7 +141,7 @@ function viz_clip(pos::Vector{SVector{3,Float64}}, sysPara, clip=[10_000, 50_000
         # color=:viridis,
         color=:winter,
         grid=0, axis=false, ticks=false)
-    # plot!(aspect_ratio=:equal)
+    # plot!(fig, aspect_ratio=:equal)
     set_equla_aspect!(fig)
     # scatter!([x[1]], [y[1]], [z[1]])
 end
